@@ -90,6 +90,15 @@ svg text{font:14px Literata,"Noto Serif KR",serif;fill:var(--ink);paint-order:st
 .par.flip{fill:color-mix(in srgb,var(--col) 20%,transparent);stroke:var(--col)}
 .uc{fill:none;stroke:var(--mute);stroke-width:1.3}.ucirc{fill:none;stroke:var(--rule);stroke-width:1.3;stroke-dasharray:3 4}.eline{stroke:var(--ink);stroke-width:1.4;stroke-dasharray:7 5;opacity:.55}
 .stackbar{display:flex;height:44px;border-radius:6px;overflow:hidden;margin:10px 0 6px}.stackbar div{display:grid;place-items:center;color:#fff;font-size:15px;white-space:nowrap;padding:0 8px}
+.gmat{display:inline-grid;grid-template-columns:repeat(2,5.2em);gap:6px;padding:6px 8px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:7px;vertical-align:middle}
+.gmat input{width:100%}
+.tog{display:flex;flex-wrap:wrap;gap:4px 14px;margin:6px 0}
+.tog label{display:flex;align-items:center;gap:8px;min-height:44px;font-size:15px;cursor:pointer}
+.tog input{width:20px;height:20px;accent-color:var(--ink)}
+#gSvg{touch-action:none;cursor:crosshair}
+.cmp{stroke:var(--mute);stroke-width:2;stroke-dasharray:5 4}
+.fan{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3;opacity:.7}
+.dv{fill:var(--row)}.da{fill:var(--col)}
 .usq{fill:none;stroke:var(--mute);stroke-dasharray:4 4}
 .cf1{fill:var(--panel);stroke:var(--ink);stroke-width:1}.cf2{fill:var(--f2);stroke:var(--ink);stroke-width:1}.cf3{fill:var(--f3);stroke:var(--ink);stroke-width:1}
 .hi{fill:var(--rowbg);stroke:var(--row);stroke-width:1.6}
@@ -168,7 +177,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -348,6 +357,35 @@ h &lt;- pmax(0, x %*% W + b)          # 뉴런 층 하나: ReLU(xW + b)</code></
 <div class="code"><pre><code>B %*% A   # Error: non-conformable arguments</code></pre></div>
 </div>
 </div>
+</div></section>
+
+<section class="band" id="geom"><div class="wrap">
+<h2>행렬곱은 벡터를 늘이고 돌려요: Av의 크기와 방향 보기</h2>
+<p>Av = x·(<b>1열</b>) + y·(<b>2열</b>). 결과는 A의 열들을 섞은 새 벡터라서 v와 같은 방향일 이유가 없고, 방향마다 늘어나는 배율이 달라서 크기와 방향이 함께 바뀌어요. 그림 위를 <b>끌어서</b> <span class="rt">v</span>를 옮겨 보세요.</p>
+<div class="two">
+<div>
+<div class="fig" style="min-height:clamp(340px,62vw,560px)"><svg id="gSvg" role="img" aria-label="벡터 v와 Av, 열의 조합"></svg></div>
+<div class="legend"><span><i style="background:var(--row)"></i>v</span><span><i style="background:var(--col)"></i>Av</span><span><i style="background:var(--mute)"></i>점선 화살표 = x·1열, y·2열</span><span><i style="background:var(--ink);opacity:.5"></i>고유벡터 방향</span></div>
+</div>
+<div class="panel">
+<div class="btns" id="gPre" role="group" aria-label="행렬 예시"></div>
+<div class="eq"><span>A =</span><div class="gmat"><input type="number" id="ga" step="any" aria-label="a"><input type="number" id="gb" step="any" aria-label="b"><input type="number" id="gc" step="any" aria-label="c"><input type="number" id="gd" step="any" aria-label="d"></div></div>
+<div class="ctrl">
+<label for="gx">v의 x</label><input type="range" id="gx" min="-2" max="2" step="0.1" value="1"><output id="gxO">1</output>
+<label for="gy">v의 y</label><input type="range" id="gy" min="-2" max="2" step="0.1" value="0"><output id="gyO">0</output>
+</div>
+<div class="tog"><label><input type="checkbox" id="gCols" checked>열의 조합</label><label><input type="checkbox" id="gEig" checked>고유벡터 방향</label><label><input type="checkbox" id="gFan">여러 방향 한꺼번에</label></div>
+<p class="big" id="gAv" style="font-size:28px"></p>
+<p id="gComb"></p>
+<div class="tbl" style="margin-bottom:.6em"><table>
+<thead><tr><th></th><th>v</th><th>Av</th><th>변화</th></tr></thead>
+<tbody><tr><td>크기</td><td class="n" id="gL1"></td><td class="n" id="gL2"></td><td class="n" id="gL3"></td></tr>
+<tr><td>방향</td><td class="n" id="gA1"></td><td class="n" id="gA2"></td><td class="n" id="gA3"></td></tr></tbody></table></div>
+<p id="gVer" class="ct"></p>
+<p id="gRng" class="note" style="font-size:15px"></p>
+</div>
+</div>
+<p class="note">"여러 방향 한꺼번에"를 켜면 길이 1인 벡터 16개(빨간 점)가 각각 어디로 가는지(파란 점) 점선으로 이어져요. 원이 타원으로 바뀌고, 타원의 가장 긴 반지름과 짧은 반지름이 이 행렬이 길이를 바꾸는 최대·최소 배율(특이값)이에요.</p>
 </div></section>
 
 <section class="band" id="three"><div class="wrap">
@@ -874,7 +912,7 @@ function frame(s,x0,x1,y0,y1,m){
   let g='';
   for(let x=Math.ceil(x0);x<=x1;x++)g+='<line class="gl'+(x===0?' ax':'')+'" x1="'+X(x)+'" x2="'+X(x)+'" y1="'+Y(y0)+'" y2="'+Y(y1)+'"/>';
   for(let y=Math.ceil(y0);y<=y1;y++)g+='<line class="gl'+(y===0?' ax':'')+'" y1="'+Y(y)+'" y2="'+Y(y)+'" x1="'+X(x0)+'" x2="'+X(x1)+'"/>';
-  return {X,Y,sc,g,Wd,Ht};
+  return {X,Y,sc,g,Wd,Ht,IX:px=>x0+(px-ox)/sc,IY:py=>y0+(Ht-oy-py)/sc};
 }
 const marker=(id,v)=>'<marker id="'+id+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var('+v+')"/></marker>';
 
@@ -1032,6 +1070,76 @@ $('#ePre').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b){e
 $('#eSnap').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b){$('#ev').value=b.dataset.a;drawEig()}});
 $('#ev').addEventListener('input',drawEig);
 draws.set(esv,drawEig);ro.observe(esv);renderEP();
+
+/* geometry of Av */
+const GP=[['대칭',[2,1,1,2]],['늘이기',[3,0,0,1]],['회전 90°',[0,-1,1,0]],['회전 30°',[0.866,-0.5,0.5,0.866]],['전단',[1,1,0,1]],['확대 2I',[2,0,0,2]],['특이 (det 0)',[1,2,0.5,1]]];
+const gsv=$('#gSvg');let gf=null,gDrag=false;
+const gM=()=>['ga','gb','gc','gd'].map(id=>{const v=parseFloat($('#'+id).value);return isFinite(v)?v:0});
+function setG(m){['ga','gb','gc','gd'].forEach((id,k)=>$('#'+id).value=m[k]);drawG()}
+function svals(m){const [a,b,c,d]=m,p=a*a+c*c,q=b*b+d*d,r=a*b+c*d,tr=p+q,dt=p*q-r*r,ds=Math.sqrt(Math.max(0,tr*tr/4-dt));return [Math.sqrt(Math.max(0,tr/2+ds)),Math.sqrt(Math.max(0,tr/2-ds))]}
+function drawG(){
+  const m=gM(),[a,b,c,d]=m,x=+$('#gx').value,y=+$('#gy').value;
+  $('#gxO').textContent=fmt(x);$('#gyO').textContent=fmt(y);
+  $$('#gPre .btn').forEach((bt,k)=>bt.setAttribute('aria-pressed',String(GP[k][1].every((v,i)=>Math.abs(v-m[i])<1e-9))));
+  const c1=[a*x,c*x],Av=[a*x+b*y,c*x+d*y],v=[x,y];
+  const [s1,s2]=svals(m);
+  const need=Math.max(3,Math.hypot(x,y),Math.hypot(Av[0],Av[1]),Math.hypot(c1[0],c1[1]),$('#gFan').checked?s1:0);
+  const R=Math.min(9,Math.ceil(need)+0.5);
+  const f=frame(gsv,-R,R,-R,R);gf=f;
+  let h='<defs>'+marker('mG1','--row')+marker('mG2','--col')+marker('mG3','--mute')+'</defs>'+f.g;
+  const ln=(p,q,cl,mk)=>'<line class="'+cl+'" x1="'+f.X(p[0])+'" y1="'+f.Y(p[1])+'" x2="'+f.X(q[0])+'" y2="'+f.Y(q[1])+'"'+(mk?' marker-end="url(#'+mk+')"':'')+'/>';
+  if($('#gEig').checked)eigs(m).forEach(e=>{h+=ln([-R*e.v[0],-R*e.v[1]],[R*e.v[0],R*e.v[1]],'eline')});
+  if($('#gFan').checked){
+    let ci='',el='';
+    for(let k=0;k<=72;k++){const q=k/72*2*Math.PI,ux=Math.cos(q),uy=Math.sin(q);ci+=(k?'L':'M')+f.X(ux).toFixed(1)+' '+f.Y(uy).toFixed(1);el+=(k?'L':'M')+f.X(a*ux+b*uy).toFixed(1)+' '+f.Y(c*ux+d*uy).toFixed(1)}
+    h+='<path class="ucirc" d="'+ci+'Z"/><path class="uc" d="'+el+'Z"/>';
+    for(let k=0;k<16;k++){const q=k/16*2*Math.PI,u=[Math.cos(q),Math.sin(q)],w=[a*u[0]+b*u[1],c*u[0]+d*u[1]];h+=ln(u,w,'fan')+'<circle class="dv" r="3.5" cx="'+f.X(u[0])+'" cy="'+f.Y(u[1])+'"/><circle class="da" r="3.5" cx="'+f.X(w[0])+'" cy="'+f.Y(w[1])+'"/>'}
+  }
+  const nv=Math.hypot(x,y),na=Math.hypot(Av[0],Av[1]);
+  if($('#gCols').checked&&Math.abs(x)>1e-9&&Math.abs(y)>1e-9){
+    if(Math.hypot(c1[0],c1[1])>1e-9)h+=ln([0,0],c1,'cmp','mG3')+'<text x="'+(f.X(c1[0]/2)+10)+'" y="'+(f.Y(c1[1]/2)+18)+'">x·1열</text>';
+    if(Math.hypot(Av[0]-c1[0],Av[1]-c1[1])>1e-9)h+=ln(c1,Av,'cmp','mG3')+'<text x="'+(f.X((c1[0]+Av[0])/2)+10)+'" y="'+(f.Y((c1[1]+Av[1])/2)-8)+'">y·2열</text>';
+  }
+  if(nv>1e-9&&na>1e-9){
+    const t1=Math.atan2(y,x),dd=((Math.atan2(Av[1],Av[0])-t1)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI,r0=Math.min(0.7,nv*0.6,na*0.6);let ar='';
+    for(let t=0;t<=24;t++){const an=t1+dd*t/24;ar+=(t?'L':'M')+f.X(r0*Math.cos(an)).toFixed(1)+' '+f.Y(r0*Math.sin(an)).toFixed(1)}
+    if(Math.abs(dd)>0.02)h+='<path class="arc" d="'+ar+'"/>';
+  }
+  if(na>1e-9)h+=ln([0,0],Av,'vb','mG2');
+  if(nv>1e-9)h+=ln([0,0],v,'va','mG1');
+  const lab=(p,txt,perp)=>{const L=Math.hypot(p[0],p[1])||1,ox=perp?-p[1]/L:p[0]/L,oy=perp?p[0]/L:p[1]/L;return '<text x="'+(f.X(p[0])+ox*18)+'" y="'+(f.Y(p[1])-oy*18+5)+'" text-anchor="middle">'+txt+'</text>'};
+  if(na>1e-9)h+=lab(Av,'Av');
+  if(nv>1e-9)h+=lab(v,'v',Math.abs(x*Av[1]-y*Av[0])<0.05*(nv*na||1));
+  gsv.innerHTML=h;
+  const r2=z=>fmt(Math.round(z*100)/100),deg=p=>(Math.atan2(p[1],p[0])*180/Math.PI+360)%360;
+  $('#gAv').textContent='Av = ('+r2(Av[0])+', '+r2(Av[1])+')';
+  $('#gComb').innerHTML=fmt(x)+'·<span class="ct">('+fmt(a)+', '+fmt(c)+')</span> + '+neg(y)+'·<span class="ct">('+fmt(b)+', '+fmt(d)+')</span> = ('+r2(Av[0])+', '+r2(Av[1])+')<br><span class="note">x × 1열 + y × 2열</span>';
+  $('#gL1').textContent=r2(nv);$('#gL2').textContent=r2(na);$('#gL3').textContent=nv>1e-9?'×'+r2(na/nv):'';
+  const d1=nv>1e-9?deg(v):null,d2=na>1e-9?deg(Av):null;
+  $('#gA1').textContent=d1===null?'':r2(d1)+'°';$('#gA2').textContent=d2===null?'':r2(d2)+'°';
+  let dd2=null;if(d1!==null&&d2!==null){dd2=((d2-d1)%360+540)%360-180}
+  $('#gA3').textContent=dd2===null?'':(dd2>0?'+':'')+r2(dd2)+'°';
+  let ver;
+  if(nv<1e-9)ver='v가 0이면 Av도 0이에요.';
+  else if(na<1e-9)ver='Av = 0: 이 방향은 0으로 납작해져요. det = 0인 특이행렬이라 되돌릴 수 없어요.';
+  else if(Math.abs(s1-s2)<0.02&&Math.abs(s1-1)<0.02)ver='길이 그대로, 방향만 '+r2(Math.abs(dd2))+'° 회전: 직교행렬이에요.';
+  else if(Math.abs(x*Av[1]-y*Av[0])<0.01*nv*na)ver=(x*Av[0]+y*Av[1]>0?'방향 그대로, 크기만 ×'+r2(na/nv):'정반대로 뒤집히고 크기 ×'+r2(na/nv))+': v가 고유벡터예요 (λ = '+r2((x*Av[0]+y*Av[1])/(nv*nv))+').';
+  else if(Math.abs(s1-s2)<0.02)ver='모든 방향을 같은 배율로 늘이면서 회전해요: 크기 ×'+r2(s1)+', 방향 '+r2(dd2)+'°.';
+  else ver='방향마다 배율이 달라서 크기(×'+r2(na/nv)+')와 방향('+(dd2>0?'+':'')+r2(dd2)+'°)이 함께 바뀌어요.';
+  $('#gVer').textContent=ver;
+  $('#gRng').textContent='이 행렬은 모든 벡터의 길이를 '+r2(s2)+' ~ '+r2(s1)+'배 사이로 바꿔요 (특이값). det = '+r2(a*d-b*c)+' → 넓이 ×'+r2(Math.abs(a*d-b*c))+'.';
+}
+$('#gPre').innerHTML=GP.map((p,i)=>'<button class="btn" type="button" data-k="'+i+'">'+p[0]+'</button>').join('');
+$('#gPre').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b)setG(GP[+b.dataset.k][1])});
+['ga','gb','gc','gd','gx','gy'].forEach(id=>$('#'+id).addEventListener('input',drawG));
+['gCols','gEig','gFan'].forEach(id=>$('#'+id).addEventListener('change',drawG));
+function gMove(e){if(!gf)return;const r=gsv.getBoundingClientRect(),cl=z=>Math.max(-2,Math.min(2,Math.round(z*10)/10));$('#gx').value=cl(gf.IX(e.clientX-r.left));$('#gy').value=cl(gf.IY(e.clientY-r.top));drawG()}
+gsv.addEventListener('pointerdown',e=>{gDrag=true;try{gsv.setPointerCapture(e.pointerId)}catch(_){}gMove(e)});
+gsv.addEventListener('pointermove',e=>{if(gDrag)gMove(e)});
+gsv.addEventListener('pointerup',()=>{gDrag=false});
+gsv.addEventListener('pointercancel',()=>{gDrag=false});
+['ga','gb','gc','gd'].forEach((id,k)=>$('#'+id).value=GP[0][1][k]);
+draws.set(gsv,drawG);ro.observe(gsv);drawG();
 
 /* gauss */
 const G=[
