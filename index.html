@@ -99,6 +99,7 @@ svg text{font:14px Literata,"Noto Serif KR",serif;fill:var(--ink);paint-order:st
 .cmp{stroke:var(--mute);stroke-width:2;stroke-dasharray:5 4}
 .fan{stroke:var(--mute);stroke-width:1;stroke-dasharray:3 3;opacity:.7}
 .dv{fill:var(--row)}.da{fill:var(--col)}
+.mpar{fill:color-mix(in srgb,var(--row) 14%,transparent);stroke:var(--row);stroke-width:1.5}.ppar{fill:color-mix(in srgb,var(--col) 14%,transparent);stroke:var(--col);stroke-width:1.5}.vb2{stroke:var(--col);stroke-width:2.2;opacity:.75}.va2{stroke:var(--row);stroke-width:2.2;opacity:.75}
 .usq{fill:none;stroke:var(--mute);stroke-dasharray:4 4}
 .cf1{fill:var(--panel);stroke:var(--ink);stroke-width:1}.cf2{fill:var(--f2);stroke:var(--ink);stroke-width:1}.cf3{fill:var(--f3);stroke:var(--ink);stroke-width:1}
 .hi{fill:var(--rowbg);stroke:var(--row);stroke-width:1.6}
@@ -386,6 +387,26 @@ h &lt;- pmax(0, x %*% W + b)          # 뉴런 층 하나: ReLU(xW + b)</code></
 </div>
 </div>
 <p class="note">"여러 방향 한꺼번에"를 켜면 길이 1인 벡터 16개(빨간 점)가 각각 어디로 가는지(파란 점) 점선으로 이어져요. 원이 타원으로 바뀌고, 타원의 가장 긴 반지름과 짧은 반지름이 이 행렬이 길이를 바꾸는 최대·최소 배율(특이값)이에요.</p>
+<h3 id="mm">행렬 × 행렬: AB의 각 열 = A × (B의 각 열)</h3>
+<p>AB = [ A·b₁ &nbsp;A·b₂ ]. B의 열 두 개를 벡터로 보고, 각각에 A를 곱하면 AB의 열이 나와요. 그래서 두 벡터의 크기와 방향이 어떻게 바뀌는지 그대로 볼 수 있어요. 빨간 평행사변형(B의 열)이 파란 평행사변형(AB의 열)으로 바뀌고, 넓이는 |det A|배가 돼요.</p>
+<div class="two">
+<div>
+<div class="fig" style="min-height:clamp(340px,62vw,560px)"><svg id="mSvg" role="img" aria-label="B의 열 벡터와 AB의 열 벡터"></svg></div>
+<div class="legend"><span><i style="background:var(--row)"></i>오른쪽 행렬의 열 (먼저 놓인 벡터)</span><span><i style="background:var(--col)"></i>곱한 결과의 열</span><span><i style="background:var(--mute)"></i>점선 = 어디로 옮겨졌나</span></div>
+</div>
+<div class="panel">
+<div class="eq"><span class="rt">A =</span><div class="gmat"><input type="number" id="ma" step="any" value="1" aria-label="A a"><input type="number" id="mb" step="any" value="2" aria-label="A b"><input type="number" id="mc" step="any" value="3" aria-label="A c"><input type="number" id="md" step="any" value="4" aria-label="A d"></div>
+<span class="ct">B =</span><div class="gmat"><input type="number" id="na" step="any" value="5" aria-label="B a"><input type="number" id="nb" step="any" value="6" aria-label="B b"><input type="number" id="nc" step="any" value="7" aria-label="B c"><input type="number" id="nd" step="any" value="8" aria-label="B d"></div></div>
+<div class="btns" id="mOrd" role="group" aria-label="곱하는 순서"><button class="btn" type="button" data-o="AB" aria-pressed="true">AB 보기</button><button class="btn" type="button" data-o="BA" aria-pressed="false">BA 보기</button></div>
+<div class="tog"><label><input type="checkbox" id="mUnit">방향만 비교 (모두 길이 1로 맞춤)</label></div>
+<p class="big" id="mRes" style="font-size:26px"></p>
+<div class="tbl" style="margin-bottom:.6em"><table>
+<thead><tr><th>열</th><th>곱하기 전</th><th>곱한 뒤</th><th>크기 배율</th><th>회전</th></tr></thead>
+<tbody id="mTb"></tbody></table></div>
+<p id="mDet"></p>
+<p id="mNote" class="note" style="font-size:15px"></p>
+</div>
+</div>
 </div></section>
 
 <section class="band" id="three"><div class="wrap">
@@ -904,14 +925,14 @@ $('#wBars').innerHTML=W.map(w=>'<span>'+w[0]+' <span class="note">'+w[1]+'×'+w[
 const draws=new Map();
 const ro=new ResizeObserver(es=>es.forEach(e=>{const f=draws.get(e.target);if(f)f()}));
 const reg=(el,fn)=>{draws.set(el,fn);ro.observe(el);fn()};
-function frame(s,x0,x1,y0,y1,m){
-  m=m||26;const Wd=s.clientWidth||300,Ht=s.clientHeight||300;
+function frame(s,x0,x1,y0,y1,m,st){
+  m=m||26;st=st||1;const Wd=s.clientWidth||300,Ht=s.clientHeight||300;
   const sc=Math.min((Wd-2*m)/(x1-x0),(Ht-2*m)/(y1-y0));
   const ox=(Wd-sc*(x1-x0))/2,oy=(Ht-sc*(y1-y0))/2;
   const X=x=>ox+(x-x0)*sc,Y=y=>Ht-oy-(y-y0)*sc;
   let g='';
-  for(let x=Math.ceil(x0);x<=x1;x++)g+='<line class="gl'+(x===0?' ax':'')+'" x1="'+X(x)+'" x2="'+X(x)+'" y1="'+Y(y0)+'" y2="'+Y(y1)+'"/>';
-  for(let y=Math.ceil(y0);y<=y1;y++)g+='<line class="gl'+(y===0?' ax':'')+'" y1="'+Y(y)+'" y2="'+Y(y)+'" x1="'+X(x0)+'" x2="'+X(x1)+'"/>';
+  for(let x=Math.ceil(x0/st)*st;x<=x1;x+=st)g+='<line class="gl'+(x===0?' ax':'')+'" x1="'+X(x)+'" x2="'+X(x)+'" y1="'+Y(y0)+'" y2="'+Y(y1)+'"/>';
+  for(let y=Math.ceil(y0/st)*st;y<=y1;y+=st)g+='<line class="gl'+(y===0?' ax':'')+'" y1="'+Y(y)+'" y2="'+Y(y)+'" x1="'+X(x0)+'" x2="'+X(x1)+'"/>';
   return {X,Y,sc,g,Wd,Ht,IX:px=>x0+(px-ox)/sc,IY:py=>y0+(Ht-oy-py)/sc};
 }
 const marker=(id,v)=>'<marker id="'+id+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var('+v+')"/></marker>';
@@ -1140,6 +1161,53 @@ gsv.addEventListener('pointerup',()=>{gDrag=false});
 gsv.addEventListener('pointercancel',()=>{gDrag=false});
 ['ga','gb','gc','gd'].forEach((id,k)=>$('#'+id).value=GP[0][1][k]);
 draws.set(gsv,drawG);ro.observe(gsv);drawG();
+
+/* matrix x matrix */
+const msv=$('#mSvg');let mOrd='AB';
+const rd=ids=>ids.map(id=>{const v=parseFloat($('#'+id).value);return isFinite(v)?v:0});
+function niceStep(R){const raw=R/5,p=Math.pow(10,Math.floor(Math.log10(raw))),n=raw/p;return (n<1.5?1:n<3.5?2:n<7.5?5:10)*p}
+function drawM(){
+  const A=rd(['ma','mb','mc','md']),B=rd(['na','nb','nc','nd']);
+  const [L,Rm,ln,rn]=mOrd==='AB'?[A,B,'A','B']:[B,A,'B','A'];
+  const cols=[[Rm[0],Rm[2]],[Rm[1],Rm[3]]],out=cols.map(c=>[L[0]*c[0]+L[1]*c[1],L[2]*c[0]+L[3]*c[1]]);
+  const unit=$('#mUnit').checked,nz=v=>{const n=Math.hypot(v[0],v[1])||1;return [v[0]/n,v[1]/n]};
+  const dc=unit?cols.map(nz):cols,dout=unit?out.map(nz):out;
+  const pts=[[0,0],...dc,...dout];
+  if(!unit)pts.push([dc[0][0]+dc[1][0],dc[0][1]+dc[1][1]],[dout[0][0]+dout[1][0],dout[0][1]+dout[1][1]]);
+  const xs=pts.map(q=>q[0]),ys=pts.map(q=>q[1]);
+  let x0=Math.min(...xs),x1=Math.max(...xs),y0=Math.min(...ys),y1=Math.max(...ys);
+  const span=Math.max(x1-x0,y1-y0,unit?1.2:2),pad=span*0.14;
+  x0-=pad;x1+=pad;y0-=pad;y1+=pad;
+  const st=unit?0.5:niceStep(span/1.6);
+  const f=frame(msv,x0,x1,y0,y1,26,st);
+  const P=q=>f.X(q[0])+','+f.Y(q[1]);
+  const par=(c,cl)=>'<polygon class="'+cl+'" points="'+P([0,0])+' '+P(c[0])+' '+P([c[0][0]+c[1][0],c[0][1]+c[1][1]])+' '+P(c[1])+'"/>';
+  const ln2=(p,q,cl,mk)=>'<line class="'+cl+'" x1="'+f.X(p[0])+'" y1="'+f.Y(p[1])+'" x2="'+f.X(q[0])+'" y2="'+f.Y(q[1])+'"'+(mk?' marker-end="url(#'+mk+')"':'')+'/>';
+  const lab=(p,t,sd)=>{const Lh=Math.hypot(p[0],p[1])||1,ux=p[0]/Lh,uy=p[1]/Lh,ox=ux*10-uy*sd*16,oy=uy*10+ux*sd*16;return '<text x="'+(f.X(p[0])+ox)+'" y="'+(f.Y(p[1])-oy+5)+'" text-anchor="middle">'+t+'</text>'};
+  const sub=['₁','₂'],rl=rn.toLowerCase();
+  let h='<defs>'+marker('mM1','--row')+marker('mM2','--col')+'</defs>'+f.g+(unit?'':par(dout,'ppar')+par(dc,'mpar'));
+  if(unit){let ci='';for(let k=0;k<=72;k++){const q=k/72*2*Math.PI;ci+=(k?'L':'M')+f.X(Math.cos(q)).toFixed(1)+' '+f.Y(Math.sin(q)).toFixed(1)}h+='<clipPath id="mClip"><rect x="'+f.X(x0)+'" y="'+f.Y(y1)+'" width="'+(f.X(x1)-f.X(x0))+'" height="'+(f.Y(y0)-f.Y(y1))+'"/></clipPath><path class="ucirc" clip-path="url(#mClip)" d="'+ci+'"/>'}
+  dout.forEach((o,k)=>{h+=ln2(dc[k],o,'fan')});
+  dout.forEach((o,k)=>{h+=ln2([0,0],o,k?'vb2':'vb','mM2')});
+  dc.forEach((c,k)=>{h+=ln2([0,0],c,k?'va2':'va','mM1')});
+  dout.forEach((o,k)=>{h+=lab(o,ln+rl+sub[k],k?-1:1)});
+  dc.forEach((c,k)=>{h+=lab(c,rl+sub[k],k?-1:1)});
+  h+='<text x="'+(f.Wd-8)+'" y="'+(f.Ht-8)+'" text-anchor="end">눈금 '+fmt(st)+'</text>';
+  msv.innerHTML=h;
+  const r2=z=>fmt(Math.round(z*100)/100),deg=p=>Math.atan2(p[1],p[0])*180/Math.PI;
+  const Pm=[[out[0][0],out[1][0]],[out[0][1],out[1][1]]];
+  $('#mRes').innerHTML=ln+rn+' = ('+fmt(Pm[0][0])+' '+fmt(Pm[0][1])+' / '+fmt(Pm[1][0])+' '+fmt(Pm[1][1])+')';
+  $('#mTb').innerHTML=cols.map((c,k)=>{const o=out[k],n1=Math.hypot(...c),n2=Math.hypot(...o);let dd=deg(o)-deg(c);dd=((dd%360)+540)%360-180;
+    return '<tr><td>'+rl+sub[k]+' → '+ln+rl+sub[k]+'</td><td>('+fmt(c[0])+', '+fmt(c[1])+')<br><span class="note">'+r2(n1)+', '+r2(deg(c))+'°</span></td><td>('+fmt(o[0])+', '+fmt(o[1])+')<br><span class="note">'+r2(n2)+', '+r2(deg(o))+'°</span></td><td class="n">'+(n1>1e-9?'×'+r2(n2/n1):'')+'</td><td class="n">'+(n1>1e-9&&n2>1e-9?(dd>0?'+':'')+r2(dd)+'°':'')+'</td></tr>'}).join('');
+  const dL=L[0]*L[3]-L[1]*L[2],dR=Rm[0]*Rm[3]-Rm[1]*Rm[2];
+  $('#mDet').innerHTML='넓이: det '+rn+' = '+r2(dR)+' → det '+ln+rn+' = det '+ln+' × det '+rn+' = '+r2(dL)+' × '+r2(dR)+' = <b>'+r2(dL*dR)+'</b>'+(dL<0?' ('+ln+'가 방향을 한 번 뒤집음)':'');
+  const [s1,s2]=svals(L);
+  $('#mNote').textContent=ln+'는 벡터 길이를 '+r2(s2)+' ~ '+r2(s1)+'배 사이로 바꿔요. '+rn+'의 두 열이 '+ln+'가 가장 많이 늘리는 방향에 가까우면 배율이 최댓값 '+r2(s1)+' 근처로 나와요. 순서를 바꾼 '+(mOrd==='AB'?'BA':'AB')+'는 다른 벡터에 다른 행렬을 곱하는 것이라 결과가 달라요.';
+}
+['ma','mb','mc','md','na','nb','nc','nd'].forEach(id=>$('#'+id).addEventListener('input',drawM));
+$('#mUnit').addEventListener('change',drawM);
+$('#mOrd').addEventListener('click',e=>{const b=e.target.closest('.btn');if(!b)return;mOrd=b.dataset.o;$$('#mOrd .btn').forEach(x=>x.setAttribute('aria-pressed',String(x===b)));drawM()});
+draws.set(msv,drawM);ro.observe(msv);drawM();
 
 /* gauss */
 const G=[
