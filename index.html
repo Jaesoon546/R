@@ -88,6 +88,7 @@ svg text{font:14px Literata,"Noto Serif KR",serif;fill:var(--ink);paint-order:st
 .pt{fill:var(--ink)}
 .par{fill:color-mix(in srgb,var(--row) 20%,transparent);stroke:var(--row);stroke-width:2}
 .par.flip{fill:color-mix(in srgb,var(--col) 20%,transparent);stroke:var(--col)}
+.uc{fill:none;stroke:var(--mute);stroke-width:1.3}.ucirc{fill:none;stroke:var(--rule);stroke-width:1.3;stroke-dasharray:3 4}.eline{stroke:var(--ink);stroke-width:1.4;stroke-dasharray:7 5;opacity:.55}
 .usq{fill:none;stroke:var(--mute);stroke-dasharray:4 4}
 .cf1{fill:var(--panel);stroke:var(--ink);stroke-width:1}.cf2{fill:var(--f2);stroke:var(--ink);stroke-width:1}.cf3{fill:var(--f3);stroke:var(--ink);stroke-width:1}
 .hi{fill:var(--rowbg);stroke:var(--row);stroke-width:1.6}
@@ -144,7 +145,7 @@ ol.quiz>li{margin:0 0 12px}
 <header class="band" style="border-top:0">
 <div class="wrap">
 <h1>행렬 연산 학습노트</h1>
-<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
+<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 고유벡터, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
 <div class="hero">
   <div class="falk" aria-label="행렬곱 팔크 배치도">
     <div class="lab">B (2×5)<br>뒤 행렬</div>
@@ -166,7 +167,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -475,6 +476,94 @@ qr(cbind(A3, b3))$rank        # 3 → 해가 하나</code></pre></div>
 <p><b>rank로 판별</b> (n = 변수 개수): rank(A) = rank([A|b]) = n → 하나, rank(A) = rank([A|b]) &lt; n → 무수히 많음, rank(A) &lt; rank([A|b]) → 없음.</p>
 </div></section>
 
+<section class="band" id="eigen"><div class="wrap">
+<h2>고유벡터는 행렬을 곱해도 방향이 그대로인 벡터, 고윳값은 그때 늘어나는 배수예요</h2>
+<p><b>Av = λv.</b> 대부분의 벡터는 행렬을 곱하면 방향이 돌아가요. 고유벡터 v만은 같은 직선 위에 남고 길이만 λ배가 돼요. 아래에서 v를 돌려 <span class="rt">v</span>와 <span class="ct">Av</span>가 한 줄에 겹치는 순간을 찾아보세요.</p>
+<div class="two">
+<div>
+<div class="fig"><svg id="eigSvg" role="img" aria-label="벡터 v와 Av, 고유벡터 방향"></svg></div>
+<div class="legend"><span><i style="background:var(--row)"></i>v (길이 1)</span><span><i style="background:var(--col)"></i>Av</span><span><i style="background:var(--ink);opacity:.5"></i>점선 = 고유벡터 방향</span><span><i style="background:var(--mute)"></i>단위원이 A로 바뀐 모양</span></div>
+</div>
+<div class="panel">
+<div class="btns" id="ePre" role="group" aria-label="행렬 고르기"></div>
+<div class="eq" id="eigM"></div>
+<div class="ctrl"><label for="ev">v 방향</label><input type="range" id="ev" min="0" max="360" step="any" value="20"><output id="evO">20°</output></div>
+<p class="big" id="eigV" style="font-size:26px"></p>
+<p id="eigT"></p>
+<p id="eigL" class="note" style="font-size:15px"></p>
+<div class="btns" id="eSnap"></div>
+</div>
+</div>
+
+<div class="two">
+<div>
+<h3>고윳값·고유벡터 구하기: det(A − λI) = 0</h3>
+<p>A = (2 1 / 1 2)로 해볼게요.</p>
+<p>① A − λI = (2−λ &nbsp;1 / 1 &nbsp;2−λ)<br>
+② det = (2−λ)² − 1 = λ² − 4λ + 3 = 0 <span class="note">특성방정식</span><br>
+③ (λ − 3)(λ − 1) = 0 → <b>λ = 3, 1</b><br>
+④ (A − λI)v = 0 풀기<br>
+&nbsp;&nbsp;λ = 3: (−1 1 / 1 −1)v = 0 → −x + y = 0 → <b>v = (1, 1)</b><br>
+&nbsp;&nbsp;λ = 1: (1 1 / 1 1)v = 0 → x + y = 0 → <b>v = (1, −1)</b><br>
+⑤ 확인: A(1, 1) = (3, 3) = 3(1, 1) ✓</p>
+<p class="note">2×2 지름길: λ² − (trace)λ + det = 0. 고유벡터는 크기가 아니라 <b>방향</b>이라서 (2, 2)나 (−1, −1)도 같은 고유벡터예요. R은 길이 1로 맞춰 (0.707, 0.707)처럼 보여주고, 부호는 반대로 나올 수 있어요.</p>
+</div>
+<div>
+<h3>꼭 알아둘 성질</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>성질</th><th>위 예시로 확인</th></tr></thead>
+<tbody>
+<tr><td>고윳값의 합 = trace (대각합)</td><td>3 + 1 = 2 + 2 = 4</td></tr>
+<tr><td>고윳값의 곱 = det</td><td>3 × 1 = 2×2 − 1×1 = 3</td></tr>
+<tr><td>λ = 0이 있으면 det = 0, 역행렬 없음</td><td>그 방향이 0으로 납작해짐</td></tr>
+<tr><td>삼각·대각행렬은 대각 원소가 고윳값</td><td>(3 0 / 0 1) → 3, 1</td></tr>
+<tr><td>대칭행렬은 고윳값이 실수, 고유벡터끼리 직교</td><td>(1, 1) · (1, −1) = 0 → PCA가 가능한 이유</td></tr>
+<tr><td>λ의 의미</td><td>|λ| &gt; 1 늘어남, |λ| &lt; 1 줄어듦, λ &lt; 0 방향 뒤집힘</td></tr>
+</tbody></table></div>
+<h3>고유값 분해와 거듭제곱</h3>
+<p>A = PDP⁻¹ (P는 고유벡터를 열로, D는 고윳값 대각행렬). 그러면 <b>Aⁿ = PDⁿP⁻¹</b>이라서 행렬을 n번 곱하는 대신 고윳값만 n제곱하면 돼요. 오래 반복하면 <b>가장 큰 고윳값의 방향만 살아남아요</b>. 거듭제곱법, PageRank, 마르코프 정상상태가 모두 이 원리예요.</p>
+</div>
+</div>
+
+<h3>프로그래밍에서 쓰이는 곳</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>알고리즘</th><th>고유벡터·고윳값의 역할</th><th>예</th></tr></thead>
+<tbody>
+<tr><td>PCA (주성분 분석)</td><td>공분산(상관)행렬의 고유벡터 = 주성분 축, 고윳값 = 그 축이 설명하는 분산</td><td>iris 4변수: 2.918, 0.914, 0.147, 0.021 → PC1 하나가 73%</td></tr>
+<tr><td>마르코프 정상상태</td><td>전이행렬 Pᵀ에서 고윳값 1의 고유벡터 = 오래 지난 뒤의 분포</td><td>건강·경증·중증 예시 → 약 52%, 28%, 20%</td></tr>
+<tr><td>PageRank</td><td>링크 전이행렬의 고윳값 1 고유벡터 = 페이지 중요도</td><td>거듭제곱법으로 계산</td></tr>
+<tr><td>스펙트럴 군집</td><td>그래프 라플라시안 L = D − A의 작은 고윳값 고유벡터로 군집을 나눔</td><td>환자 유사도 그래프 군집</td></tr>
+<tr><td>RNN 기울기 폭발·소실</td><td>W_hh를 반복해서 곱하므로 고윳값 크기가 1보다 크면 폭발, 작으면 소실</td><td>직교 초기화(|λ| = 1)로 완화</td></tr>
+<tr><td>최적화</td><td>헤시안의 고윳값이 모두 양수면 최솟값, 부호가 섞이면 안장점</td><td>뉴턴법, 학습 지형 분석</td></tr>
+<tr><td>SVD</td><td>AᵀA의 고유벡터 = V, 특이값² = AᵀA의 고윳값</td><td>추천, 차원 축소, 이미지 압축</td></tr>
+</tbody></table></div>
+<div class="two">
+<div class="code"><pre><code>A &lt;- matrix(c(2, 1, 1, 2), nrow = 2, byrow = TRUE)
+e &lt;- eigen(A)
+e$values                 # 3 1
+e$vectors                # 열 하나 = 고유벡터 하나 (0.707 0.707 / ...)
+A %*% e$vectors[, 1]     # Av
+3 * e$vectors[, 1]       # λv  ← 같으면 고유벡터
+sum(e$values); prod(e$values)   # 4 = trace, 3 = det
+
+P &lt;- e$vectors           # 고유값 분해 A = P D P⁻¹
+P %*% diag(e$values) %*% solve(P)        # A로 복원
+P %*% diag(e$values^10) %*% solve(P)     # A의 10제곱</code></pre></div>
+<div class="code"><pre><code># PCA = 상관행렬의 고유값 분해
+X  &lt;- iris[, 1:4]
+ev &lt;- eigen(cor(X))
+ev$values                       # 2.918 0.914 0.147 0.021
+ev$values / sum(ev$values)      # 0.730 0.229 0.037 0.005
+prcomp(X, scale. = TRUE)$sdev^2 # 같은 값
+
+# 마르코프 정상상태 = 고윳값 1의 고유벡터
+Pm &lt;- matrix(c(0.8, 0.15, 0.05,
+               0.3, 0.5,  0.2,
+               0.1, 0.3,  0.6), nrow = 3, byrow = TRUE)
+s &lt;- Re(eigen(t(Pm))$vectors[, 1]); s / sum(s)   # 0.519 0.278 0.204</code></pre></div>
+</div>
+</div></section>
+
 <section class="band" id="types"><div class="wrap">
 <h2>행렬의 종류: 모양을 알면 더 빠른 함수, 더 적은 메모리, 미리 보이는 문제</h2>
 <p>각 그림은 4×4 기준의 생김새예요. 검은 칸 = 임의의 값, 빈 칸 = 0, 빨강 = 1 또는 특별한 값.</p>
@@ -569,12 +658,14 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <li>(3×4) × (4×2)의 결과 크기는? 반대 순서로 곱할 수 있나요?</li>
 <li>a = (1, 2), b = (−2, 1)의 내적과 두 벡터의 관계는?</li>
 <li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
+<li>(4 1 / 2 3)의 고윳값과 고유벡터를 구하세요.</li>
 </ol>
 </div>
 <div>
 <details><summary>1 · 2번 정답</summary><p>1. (2 0 / 2 3)<br>2. (2·1+0·2, 2·4+0·1 / 1·1+3·2, 1·4+3·1) = (2 8 / 7 7). c<sub>21</sub> = C의 2행 (1, 3) · D의 1열 (1, 2) = 7</p></details>
 <details><summary>3 · 4번 정답</summary><p>3. det C = 6 − 0 = 6, C⁻¹ = ⅙(3 0 / −1 2)<br>4. x = 2, y = 3 (det = −1 − 6 = −7, 크래머: x = (−8 − 6)/−7 = 2)</p></details>
 <details><summary>5 · 6 · 7번 정답</summary><p>5. (3×2). 반대는 (4×2)(3×4)에서 2 ≠ 3이라 불가능<br>6. 1×(−2) + 2×1 = 0 → 직교<br>7. 3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
+<details><summary>8번 정답</summary><p>λ² − 7λ + 10 = 0 → λ = 5, 2<br>λ = 5: (−1 1 / 2 −2)v = 0 → v = (1, 1)<br>λ = 2: (2 1 / 2 1)v = 0 → v = (1, −2)<br>확인: A(1, −2) = (2, −4) = 2(1, −2)</p></details>
 <div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
 D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
 C * D; C %*% D; det(C); solve(C)
@@ -787,6 +878,48 @@ reg($('#lineSvg'),lineFig($('#lineSvg'),[[2,1,5,'l1'],[1,3,10,'l2']],[1,3],[-1,6
 reg($('#case1'),lineFig($('#case1'),[[2,1,5,'l1'],[1,3,10,'l2']],[1,3],[-1,5]));
 reg($('#case2'),lineFig($('#case2'),[[1,1,2,'l1'],[2,2,4,'l2 dsh']],null,[-1,4]));
 reg($('#case3'),lineFig($('#case3'),[[1,1,2,'l1'],[2,2,5,'l2']],null,[-1,4]));
+
+/* eigen */
+const EP=[['대칭',[2,1,1,2]],['늘이기',[3,0,0,1]],['뒤집기 포함',[1,2,2,1]],['밀기(전단)',[1,1,0,1]],['회전 90°',[0,-1,1,0]]];
+let ek=0;
+const esv=$('#eigSvg');
+function eigs(m){
+  const [a,b,c,d]=m,tr=a+d,dt=a*d-b*c,disc=tr*tr-4*dt;
+  if(disc<-1e-9)return [];
+  const sq=Math.sqrt(Math.max(0,disc)),ls=disc<1e-9?[tr/2]:[(tr+sq)/2,(tr-sq)/2];
+  return ls.map(l=>{let v;if(Math.abs(b)>1e-9)v=[b,l-a];else if(Math.abs(c)>1e-9)v=[l-d,c];else v=Math.abs(l-a)<1e-9?[1,0]:[0,1];const n=Math.hypot(v[0],v[1]);return {l,v:[v[0]/n,v[1]/n]}});
+}
+function drawEig(){
+  const m=EP[ek][1],[a,b,c,d]=m,E=eigs(m);
+  const t=+$('#ev').value,r=t*Math.PI/180,v=[Math.cos(r),Math.sin(r)],Av=[a*v[0]+b*v[1],c*v[0]+d*v[1]];
+  $('#evO').textContent=Math.round(t)+'°';
+  const R=3.6,f=frame(esv,-R,R,-R,R);
+  let el='',uc='',ci='';
+  E.forEach(e=>{el+='<line class="eline" x1="'+f.X(-R*e.v[0])+'" y1="'+f.Y(-R*e.v[1])+'" x2="'+f.X(R*e.v[0])+'" y2="'+f.Y(R*e.v[1])+'"/>'});
+  for(let k=0;k<=72;k++){const q=k/72*2*Math.PI,x=Math.cos(q),y=Math.sin(q);uc+=(k?'L':'M')+f.X(a*x+b*y).toFixed(1)+' '+f.Y(c*x+d*y).toFixed(1);ci+=(k?'L':'M')+f.X(x).toFixed(1)+' '+f.Y(y).toFixed(1)}
+  const lab=(p,txt)=>{const L=Math.hypot(p[0],p[1])||1;return '<text x="'+(f.X(p[0])+p[0]/L*18)+'" y="'+(f.Y(p[1])-p[1]/L*18+5)+'" text-anchor="middle">'+txt+'</text>'};
+  esv.innerHTML='<defs>'+marker('mE1','--row')+marker('mE2','--col')+'</defs>'+f.g+'<path class="ucirc" d="'+ci+'Z"/><path class="uc" d="'+uc+'Z"/>'+el+
+    '<line class="vb" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(Av[0])+'" y2="'+f.Y(Av[1])+'" marker-end="url(#mE2)"/>'+
+    '<line class="va" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(v[0])+'" y2="'+f.Y(v[1])+'" marker-end="url(#mE1)"/>'+'<text x="'+(f.X(v[0])-v[1]*18)+'" y="'+(f.Y(v[1])-v[0]*18+5)+'" text-anchor="middle">v</text>'+lab(Av,'Av');
+  const r2=x=>fmt(Math.round(x*100)/100),nA=Math.hypot(Av[0],Av[1]);
+  const cross=(v[0]*Av[1]-v[1]*Av[0])/(nA||1),dot=v[0]*Av[0]+v[1]*Av[1];
+  const ang=Math.acos(Math.max(-1,Math.min(1,dot/(nA||1))))*180/Math.PI;
+  $('#eigV').textContent='v = ('+r2(v[0])+', '+r2(v[1])+') → Av = ('+r2(Av[0])+', '+r2(Av[1])+')';
+  $('#eigT').innerHTML=Math.abs(cross)<0.02?'<span class="ok">고유벡터예요! Av = λv, λ = '+r2(dot)+'</span>'+(dot<0?' (방향이 뒤집혀도 같은 직선이면 고유벡터)':''):'v와 Av 사이가 <b>'+Math.round(ang)+'°</b> 벌어져 있어요 → 고유벡터 아님';
+  const tr=a+d,dt=a*d-b*c;
+  $('#eigL').textContent=E.length===0?'실수 고윳값이 없어요: 모든 벡터가 돌아가서 같은 직선에 남는 방향이 없어요 (고윳값은 복소수 ±i).':E.length===1?'고윳값 λ = '+fmt(E[0].l)+' (중근). 고유벡터 방향이 하나뿐이에요.':'고윳값 λ₁ = '+fmt(E[0].l)+', λ₂ = '+fmt(E[1].l)+' · 합 '+fmt(E[0].l+E[1].l)+' = trace '+fmt(tr)+', 곱 '+fmt(E[0].l*E[1].l)+' = det '+fmt(dt);
+}
+function renderEP(){
+  $('#ePre').innerHTML=EP.map((p,i)=>'<button class="btn" type="button" data-k="'+i+'" aria-pressed="'+(i===ek)+'">'+p[0]+'</button>').join('');
+  const m=EP[ek][1];
+  $('#eigM').innerHTML='<span>A =</span>'+matHTML([[m[0],m[1]],[m[2],m[3]]],{sm:1});
+  $('#eSnap').innerHTML=eigs(m).map(e=>'<button class="btn" type="button" data-a="'+(((Math.atan2(e.v[1],e.v[0])*180/Math.PI)+360)%360)+'">λ = '+fmt(e.l)+' 방향에 맞추기</button>').join('');
+  drawEig();
+}
+$('#ePre').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b){ek=+b.dataset.k;renderEP()}});
+$('#eSnap').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b){$('#ev').value=b.dataset.a;drawEig()}});
+$('#ev').addEventListener('input',drawEig);
+draws.set(esv,drawEig);ro.observe(esv);renderEP();
 
 /* gauss */
 const G=[
