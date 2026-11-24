@@ -156,7 +156,7 @@ ol.quiz>li{margin:0 0 12px}
 <header class="band" style="border-top:0">
 <div class="wrap">
 <h1>행렬 연산 학습노트</h1>
-<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 고유벡터, PCA·SVD, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
+<p class="lede">요소 연산과 내적에서 출발해 행렬곱, 벡터의 크기·방향 변화, 행렬식, 연립방정식, 고유벡터, PCA·SVD, 3차원 확장, 행렬의 종류까지 목차 순서대로 읽도록 짰어요. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
 <div class="hero">
   <div class="falk" aria-label="행렬곱 팔크 배치도">
     <div class="lab">B (2×5)<br>뒤 행렬</div>
@@ -178,7 +178,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#three">3차원 확장</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -363,6 +363,7 @@ h &lt;- pmax(0, x %*% W + b)          # 뉴런 층 하나: ReLU(xW + b)</code></
 <section class="band" id="geom"><div class="wrap">
 <h2>행렬곱은 벡터를 늘이고 돌려요: Av의 크기와 방향 보기</h2>
 <p>Av = x·(<b>1열</b>) + y·(<b>2열</b>). 결과는 A의 열들을 섞은 새 벡터라서 v와 같은 방향일 이유가 없고, 방향마다 늘어나는 배율이 달라서 크기와 방향이 함께 바뀌어요. 그림 위를 <b>끌어서</b> <span class="rt">v</span>를 옮겨 보세요.</p>
+<p class="note">그림에 함께 나오는 <b>고유벡터</b>(방향이 안 바뀌는 선), <b>특이값</b>(길이가 바뀌는 최소·최대 배율), <b>det</b>(넓이 배율)는 뒤의 <a href="#det">행렬식</a>·<a href="#eigen">고유벡터</a>·<a href="#pca">PCA·SVD</a>에서 자세히 다뤄요. 지금은 괄호 안 뜻 정도로만 보면 돼요.</p>
 <div class="two">
 <div>
 <div class="fig" style="min-height:clamp(340px,62vw,560px)"><svg id="gSvg" role="img" aria-label="벡터 v와 Av, 열의 조합"></svg></div>
@@ -407,50 +408,6 @@ h &lt;- pmax(0, x %*% W + b)          # 뉴런 층 하나: ReLU(xW + b)</code></
 <p id="mNote" class="note" style="font-size:15px"></p>
 </div>
 </div>
-</div></section>
-
-<section class="band" id="three"><div class="wrap">
-<h2>3차원: 3×3 행렬곱은 짝이 3쌍, 3×3×3 텐서는 축을 골라 축약해요</h2>
-<div class="two">
-<div>
-<h3 style="margin-top:0">3×3 행렬곱</h3>
-<div class="eq"><span data-m="1,2,0;0,1,3;2,0,1">A</span><span data-m="1,0,2;3,1,0;0,2,1">B</span><span class="op">=</span><span data-m="7,2,2;3,7,3;2,2,5">AB</span></div>
-<p>예: c<sub>11</sub> = (1, 2, 0) · (1, 3, 0) = 1 + 6 + 0 = 7. 3×3 행렬은 3차원 공간의 점을 옮겨요: A·(1, 1, 1) = (3, 4, 3).</p>
-<p><b>3×3 행렬식</b>은 첫 행 전개, 부호 + − +:<br>det A = 1(1·1 − 3·0) − 2(0·1 − 3·2) + 0 = 1 + 12 = <b>13</b></p>
-<h3>3×3×3 텐서 (축 A, B, Z)</h3>
-<p>축이 세 개라서 <b>어느 축끼리 짝지을지</b> 정해야 해요(텐서 축약). 규칙: ① 짝지을 축의 길이가 같고 ② 그 축 방향으로 곱해 더하면 축이 사라지고 ③ 남은 축이 이어 붙어 결과 모양이 돼요.</p>
-<p class="note">결과 차원 수 = 3 + 3 − 2 × (축약한 축 수). 행렬곱은 2 + 2 − 2 = 2라서 계속 행렬이었어요.</p>
-</div>
-<div>
-<svg class="cube" id="cube" viewBox="0 0 390 310" role="img" aria-label="3×3×3 텐서와 Z축 방향 한 줄"></svg>
-<p class="note">빨간 줄 = T[1, 1, ·], Z축 방향으로 읽은 값 (1, 10, 19). 1~27을 R 순서로 채운 텐서 기준이에요.</p>
-</div>
-</div>
-<div class="tbl"><table class="stack">
-<thead><tr><th>축약하는 축</th><th>계산</th><th>결과 모양</th><th>원소 하나당 곱셈</th><th>예시 값</th></tr></thead>
-<tbody>
-<tr><td>없음</td><td>원소별 곱 T ⊙ S</td><td>3×3×3</td><td class="n">1</td><td></td></tr>
-<tr><td>1개, 벡터와</td><td>Z축 가중합, v = (1, 0, 2)</td><td>3×3</td><td class="n">3</td><td>R[1,1] = 1×1 + 10×0 + 19×2 = 39</td></tr>
-<tr><td>1개, 텐서와</td><td>T의 Z축 · S의 A축</td><td>3×3×3×3</td><td class="n">3</td><td>C[1,1,1,1] = 1×1 + 10×2 + 19×3 = 78</td></tr>
-<tr><td>2개</td><td>T의 (B, Z) · S의 (A, B)</td><td>3×3</td><td class="n">9</td><td>D[1,1] = 765</td></tr>
-<tr><td>3개 전부</td><td>모든 원소 곱의 합</td><td>스칼라</td><td class="n">27</td><td></td></tr>
-</tbody></table></div>
-<div class="two">
-<div class="code"><pre><code>T &lt;- array(1:27, dim = c(3, 3, 3)); S &lt;- T
-v &lt;- c(1, 0, 2)
-R &lt;- T[, , 1]*v[1] + T[, , 2]*v[2] + T[, , 3]*v[3]   # 39 48 57 / ...
-
-C &lt;- array(matrix(T, nrow = 9) %*% matrix(S, nrow = 3),
-           dim = c(3, 3, 3, 3)); C[1, 1, 1, 1]       # 78
-D &lt;- matrix(T, nrow = 3) %*% matrix(S, ncol = 3)     # 765 ...</code></pre></div>
-<div class="code"><pre><code>import numpy as np
-T = np.arange(1, 28).reshape((3, 3, 3), order='F'); S = T
-np.einsum('abz,z->ab',     T, np.array([1, 0, 2]))
-np.einsum('abk,kxy->abxy', T, S)    # (3,3,3,3)
-np.einsum('abz,bzy->ay',   T, S)    # (3,3)
-# 양쪽에 나오고 화살표 뒤에 없는 글자 = 축약되는 축</code></pre></div>
-</div>
-<p class="note">배치 행렬곱 (배치, m, n) × (배치, n, p) = (배치, m, p)는 첫 축을 그대로 두고 2차원 행렬곱을 배치 수만큼 반복하는 특수한 경우예요. 세 행렬의 곱 A × B × Z는 (AB)Z처럼 두 번 나눠 계산하고, 결합법칙 덕분에 어느 쪽부터 해도 같아요.</p>
 </div></section>
 
 <section class="band" id="det"><div class="wrap">
@@ -730,6 +687,51 @@ scores &lt;- Xc %*% eigen(cov(mdat))$vectors   # 주성분 점수</code></pre></
 </tbody></table></div>
 </div></section>
 
+<section class="band" id="three"><div class="wrap">
+<h2>3차원으로 확장: 3×3 행렬곱은 짝이 3쌍, 3×3×3 텐서는 축을 골라 축약해요</h2>
+<p class="note">앞의 2×2 규칙을 그대로 늘린 확장 내용이에요. 딥러닝의 배치 계산과 einsum을 이해할 때 다시 보면 좋아요.</p>
+<div class="two">
+<div>
+<h3 style="margin-top:0">3×3 행렬곱</h3>
+<div class="eq"><span data-m="1,2,0;0,1,3;2,0,1">A</span><span data-m="1,0,2;3,1,0;0,2,1">B</span><span class="op">=</span><span data-m="7,2,2;3,7,3;2,2,5">AB</span></div>
+<p>예: c<sub>11</sub> = (1, 2, 0) · (1, 3, 0) = 1 + 6 + 0 = 7. 3×3 행렬은 3차원 공간의 점을 옮겨요: A·(1, 1, 1) = (3, 4, 3).</p>
+<p><b>3×3 행렬식</b>은 첫 행 전개, 부호 + − +:<br>det A = 1(1·1 − 3·0) − 2(0·1 − 3·2) + 0 = 1 + 12 = <b>13</b></p>
+<h3>3×3×3 텐서 (축 A, B, Z)</h3>
+<p>축이 세 개라서 <b>어느 축끼리 짝지을지</b> 정해야 해요(텐서 축약). 규칙: ① 짝지을 축의 길이가 같고 ② 그 축 방향으로 곱해 더하면 축이 사라지고 ③ 남은 축이 이어 붙어 결과 모양이 돼요.</p>
+<p class="note">결과 차원 수 = 3 + 3 − 2 × (축약한 축 수). 행렬곱은 2 + 2 − 2 = 2라서 계속 행렬이었어요.</p>
+</div>
+<div>
+<svg class="cube" id="cube" viewBox="0 0 390 310" role="img" aria-label="3×3×3 텐서와 Z축 방향 한 줄"></svg>
+<p class="note">빨간 줄 = T[1, 1, ·], Z축 방향으로 읽은 값 (1, 10, 19). 1~27을 R 순서로 채운 텐서 기준이에요.</p>
+</div>
+</div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>축약하는 축</th><th>계산</th><th>결과 모양</th><th>원소 하나당 곱셈</th><th>예시 값</th></tr></thead>
+<tbody>
+<tr><td>없음</td><td>원소별 곱 T ⊙ S</td><td>3×3×3</td><td class="n">1</td><td></td></tr>
+<tr><td>1개, 벡터와</td><td>Z축 가중합, v = (1, 0, 2)</td><td>3×3</td><td class="n">3</td><td>R[1,1] = 1×1 + 10×0 + 19×2 = 39</td></tr>
+<tr><td>1개, 텐서와</td><td>T의 Z축 · S의 A축</td><td>3×3×3×3</td><td class="n">3</td><td>C[1,1,1,1] = 1×1 + 10×2 + 19×3 = 78</td></tr>
+<tr><td>2개</td><td>T의 (B, Z) · S의 (A, B)</td><td>3×3</td><td class="n">9</td><td>D[1,1] = 765</td></tr>
+<tr><td>3개 전부</td><td>모든 원소 곱의 합</td><td>스칼라</td><td class="n">27</td><td></td></tr>
+</tbody></table></div>
+<div class="two">
+<div class="code"><pre><code>T &lt;- array(1:27, dim = c(3, 3, 3)); S &lt;- T
+v &lt;- c(1, 0, 2)
+R &lt;- T[, , 1]*v[1] + T[, , 2]*v[2] + T[, , 3]*v[3]   # 39 48 57 / ...
+
+C &lt;- array(matrix(T, nrow = 9) %*% matrix(S, nrow = 3),
+           dim = c(3, 3, 3, 3)); C[1, 1, 1, 1]       # 78
+D &lt;- matrix(T, nrow = 3) %*% matrix(S, ncol = 3)     # 765 ...</code></pre></div>
+<div class="code"><pre><code>import numpy as np
+T = np.arange(1, 28).reshape((3, 3, 3), order='F'); S = T
+np.einsum('abz,z->ab',     T, np.array([1, 0, 2]))
+np.einsum('abk,kxy->abxy', T, S)    # (3,3,3,3)
+np.einsum('abz,bzy->ay',   T, S)    # (3,3)
+# 양쪽에 나오고 화살표 뒤에 없는 글자 = 축약되는 축</code></pre></div>
+</div>
+<p class="note">배치 행렬곱 (배치, m, n) × (배치, n, p) = (배치, m, p)는 첫 축을 그대로 두고 2차원 행렬곱을 배치 수만큼 반복하는 특수한 경우예요. 세 행렬의 곱 A × B × Z는 (AB)Z처럼 두 번 나눠 계산하고, 결합법칙 덕분에 어느 쪽부터 해도 같아요.</p>
+</div></section>
+
 <section class="band" id="types"><div class="wrap">
 <h2>행렬의 종류: 모양을 알면 더 빠른 함수, 더 적은 메모리, 미리 보이는 문제</h2>
 <p>각 그림은 4×4 기준의 생김새예요. 검은 칸 = 임의의 값, 빈 칸 = 0, 빨강 = 1 또는 특별한 값.</p>
@@ -820,23 +822,24 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <div class="eq"><span>C =</span><span data-m="2,0;1,3">C</span><span>D =</span><span data-m="1,4;2,1">D</span></div>
 <ol class="quiz">
 <li>C ⊙ D (요소곱)를 구하세요.</li>
+<li>a = (1, 2), b = (−2, 1)의 내적과 두 벡터의 관계는?</li>
 <li>CD (행렬곱)를 구하세요. c<sub>21</sub>은 어느 행과 어느 열의 내적인가요?</li>
+<li>(3×4) × (4×2)의 결과 크기는? 반대 순서로 곱할 수 있나요?</li>
 <li>det C와 C⁻¹을 구하세요.</li>
 <li>x + 2y = 8, 3x − y = 3을 풀어보세요.</li>
-<li>(3×4) × (4×2)의 결과 크기는? 반대 순서로 곱할 수 있나요?</li>
-<li>a = (1, 2), b = (−2, 1)의 내적과 두 벡터의 관계는?</li>
-<li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
 <li>(4 1 / 2 3)의 고윳값과 고유벡터를 구하세요.</li>
 <li>2×3 행렬 A에 대해 AAᵀ와 AᵀA의 크기는? 둘 다 대칭인가요?</li>
 <li>평균을 빼지 않은 데이터로 eigen(t(X) %*% X)를 하면 고윳값을 분산이라고 부를 수 있나요?</li>
+<li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
 </ol>
 </div>
 <div>
-<details><summary>1 · 2번 정답</summary><p>1. (2 0 / 2 3)<br>2. (2·1+0·2, 2·4+0·1 / 1·1+3·2, 1·4+3·1) = (2 8 / 7 7). c<sub>21</sub> = C의 2행 (1, 3) · D의 1열 (1, 2) = 7</p></details>
-<details><summary>3 · 4번 정답</summary><p>3. det C = 6 − 0 = 6, C⁻¹ = ⅙(3 0 / −1 2)<br>4. x = 2, y = 3 (det = −1 − 6 = −7, 크래머: x = (−8 − 6)/−7 = 2)</p></details>
-<details><summary>5 · 6 · 7번 정답</summary><p>5. (3×2). 반대는 (4×2)(3×4)에서 2 ≠ 3이라 불가능<br>6. 1×(−2) + 2×1 = 0 → 직교<br>7. 3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
-<details><summary>8번 정답</summary><p>λ² − 7λ + 10 = 0 → λ = 5, 2<br>λ = 5: (−1 1 / 2 −2)v = 0 → v = (1, 1)<br>λ = 2: (2 1 / 2 1)v = 0 → v = (1, −2)<br>확인: A(1, −2) = (2, −4) = 2(1, −2)</p></details>
-<details><summary>9 · 10번 정답</summary><p>9. AAᵀ는 2×2, AᵀA는 3×3. 둘 다 항상 대칭이고, 0이 아닌 고윳값은 같아요.<br>10. 아니요. 원점 기준 제곱합이라 평균의 크기가 섞여 있어요. 평균을 빼고 n − 1로 나눈 cov(X)를 분해하거나, svd(Xc)$d^2 / (n − 1)을 쓰면 분산이에요.</p></details>
+<details><summary>1 · 2번 정답</summary><p>1. (2 0 / 2 3)<br>2. 1×(−2) + 2×1 = 0 → 직교</p></details>
+<details><summary>3 · 4번 정답</summary><p>3. (2·1+0·2, 2·4+0·1 / 1·1+3·2, 1·4+3·1) = (2 8 / 7 7). c<sub>21</sub> = C의 2행 (1, 3) · D의 1열 (1, 2) = 7<br>4. (3×2). 반대는 (4×2)(3×4)에서 2 ≠ 3이라 불가능</p></details>
+<details><summary>5 · 6번 정답</summary><p>5. det C = 6 − 0 = 6, C⁻¹ = ⅙(3 0 / −1 2)<br>6. x = 2, y = 3 (det = −1 − 6 = −7, 크래머: x = (−8 − 6) ÷ (−7) = 2)</p></details>
+<details><summary>7번 정답</summary><p>λ² − 7λ + 10 = 0 → λ = 5, 2<br>λ = 5: (−1 1 / 2 −2)v = 0 → v = (1, 1)<br>λ = 2: (2 1 / 2 1)v = 0 → v = (1, −2)<br>확인: A(1, −2) = (2, −4) = 2(1, −2)</p></details>
+<details><summary>8 · 9번 정답</summary><p>8. AAᵀ는 2×2, AᵀA는 3×3. 둘 다 항상 대칭이고, 0이 아닌 고윳값은 같아요.<br>9. 아니요. 원점 기준 제곱합이라 평균의 크기가 섞여 있어요. 평균을 빼고 n − 1로 나눈 cov(X)를 분해하거나, svd(Xc)$d^2 / (n − 1)을 쓰면 분산이에요.</p></details>
+<details><summary>10번 정답</summary><p>3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
 <div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
 D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
 C * D; C %*% D; det(C); solve(C)
