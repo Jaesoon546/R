@@ -1,0 +1,847 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>행렬 연산 학습노트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Literata:opsz,wght@7..72,400;7..72,600&family=Noto+Serif+KR:wght@400;600;700&display=swap" rel="stylesheet">
+<style>
+/* VOICE everyday study reference: calm, exact, a textbook plate you return to
+   IDEA a scientific plate where every row is carmine and every column is prussian blue, the same code from the first figure to the last
+   PICTURE Falk's scheme: B above, A at left, C where its row and column cross; click a cell and its inner product is spelled out
+   COLOUR white ground, ink #10131a, carmine = rows / first operand, prussian = columns / second operand; night #0f1217
+   TYPE Literata (numbers, Latin) + Noto Serif KR (Korean)
+   LAYOUT title across the top, scheme and readout side by side under it; phones stack title, scheme, readout */
+:root{color-scheme:light dark;--bg:light-dark(#ffffff,#0f1217);--ink:light-dark(#10131a,#e7e9ee);--mute:light-dark(#596070,#9aa3b3);--rule:light-dark(#dde1e8,#2a303b);--panel:light-dark(#f5f6f8,#171b23);--row:light-dark(#c1121f,#ff6f76);--col:light-dark(#0b4f8a,#72b4ff);--rowbg:light-dark(#fce8e9,#3b1619);--colbg:light-dark(#e4eef8,#11283f);--f2:light-dark(#ffffff,#222834);--f3:light-dark(#dfe3ea,#0c0f14)}
+:root[data-theme=light]{color-scheme:light}
+:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+html{scroll-padding-top:72px}
+body{margin:0;background:var(--bg);color:var(--ink);font:16.5px/1.7 Literata,"Noto Serif KR",serif;overflow-x:clip}
+.band{padding-block:clamp(28px,4vw,56px);padding-left:max(5vw,16px);padding-right:max(5vw,16px);border-top:1px solid var(--rule)}
+.wrap{max-width:1140px;margin:0 auto}
+h1,h2,h3{font-family:Literata,"Noto Serif KR",serif;line-height:1.15;letter-spacing:-.02em;text-wrap:balance;margin:0 0 .5em}
+h1{font-size:clamp(32px,5vw,48px);font-weight:700}
+h2{font-size:clamp(25px,3.2vw,32px);font-weight:700}
+h3{font-size:20px;font-weight:600;margin-top:1.4em}
+p{margin:0 0 1em;max-width:68ch}
+.lede{font-size:18px;color:var(--mute);max-width:60ch}
+.rt{color:var(--row);font-weight:600}.ct{color:var(--col);font-weight:600}
+nav.scroll{display:flex;gap:6px;padding:10px max(5vw,16px);background:var(--bg);border-top:1px solid var(--rule);white-space:nowrap}
+nav.scroll a{flex:none;color:var(--ink);text-decoration:none;font-size:15px;padding:8px 12px;border-radius:999px;border:1px solid var(--rule)}
+nav.scroll a:hover,nav.scroll a:focus-visible{border-color:var(--ink)}
+@media(min-width:900px){nav.scroll{position:sticky;top:0;z-index:5}}
+pre,.scroll{overflow-x:auto}
+code{font:14px/1.6 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-wrap:anywhere}
+.code{position:relative;margin:0 0 1.2em}
+.code pre{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;margin:0}
+.code pre code{overflow-wrap:normal}
+.copy{position:absolute;top:6px;right:6px;font:13px Literata,"Noto Serif KR",serif;padding:4px 10px;border-radius:6px;border:1px solid var(--rule);background:var(--bg);color:var(--ink);cursor:pointer}
+.two{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:clamp(20px,3vw,40px);align-items:start}
+@media(max-width:820px){.two{grid-template-columns:minmax(0,1fr)}}
+.panel{background:var(--panel);border:1px solid var(--rule);border-radius:10px;padding:18px}
+table{border-collapse:collapse;width:100%;font-size:15.5px}
+th,td{text-align:left;padding:9px 10px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-weight:600;border-bottom:1.5px solid var(--ink)}
+td.n{text-align:right;white-space:nowrap}
+.tbl{overflow-x:auto;margin:0 0 1.4em}
+/* matrices */
+.mat{--cs:clamp(34px,8.6vw,50px);display:inline-grid;grid-template-columns:repeat(var(--n),var(--cs));gap:4px;padding:5px 6px;border-left:2px solid var(--ink);border-right:2px solid var(--ink);border-radius:7px;vertical-align:middle}
+.mat .cell{width:var(--cs);height:var(--cs);display:grid;place-items:center;font:500 17px Literata,serif;color:var(--ink);background:var(--bg);border:1px solid var(--rule);border-radius:4px;padding:0;transition:background .2s,color .2s}
+.mat.sm{--cs:30px;gap:2px;padding:3px 4px}
+.mat.sm .cell{font-size:14.5px;border-color:transparent;background:transparent}
+.mat.aug .cell[data-j="3"]{margin-left:8px;box-shadow:-6px 0 0 -4.5px var(--ink)}
+.mat.sm.aug{--cs:36px}
+.mat .cell.r{background:var(--rowbg);color:var(--row);border-color:var(--row)}
+.mat .cell.k{background:var(--colbg);color:var(--col);border-color:var(--col)}
+.mat .cell.sel{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.mat .cell.hl{background:var(--rowbg);color:var(--row)}
+button.cell{cursor:pointer}
+button.cell:focus-visible,.btn:focus-visible,input:focus-visible{outline:3px solid var(--col);outline-offset:2px}
+.eq{display:flex;flex-wrap:wrap;align-items:center;gap:10px 12px;margin:0 0 1em}
+.op{font-size:22px;color:var(--mute)}
+/* hero */
+.hero{display:grid;grid-template-columns:auto minmax(0,1fr);gap:clamp(20px,4vw,56px);align-items:center;margin-top:20px}
+@media(max-width:760px){.hero{grid-template-columns:minmax(0,1fr)}}
+.falk{display:grid;grid-template-columns:auto auto;gap:10px;justify-content:start;align-items:start}
+.falk .lab{font-size:14px;color:var(--mute);align-self:end;justify-self:end;text-align:right;line-height:1.3}
+.big{font-size:clamp(30px,4.4vw,44px);font-weight:600;line-height:1.1;margin:0 0 .4em}
+.readout p{margin:0 0 .5em}
+.sum{font-size:20px}
+.btns{display:flex;flex-wrap:wrap;gap:8px;margin:12px 0}
+.btn{min-height:44px;padding:8px 16px;border-radius:8px;border:1px solid var(--ink);background:var(--bg);color:var(--ink);font:15px Literata,"Noto Serif KR",serif;cursor:pointer}
+.btn[aria-pressed=true]{background:var(--ink);color:var(--bg)}
+.note{font-size:14px;color:var(--mute)}
+/* figures */
+.fig{position:relative;min-height:340px}
+.fig.sm{min-height:200px}
+.fig>svg{position:absolute;inset:0;width:100%;height:100%}
+svg text{font:14px Literata,"Noto Serif KR",serif;fill:var(--ink);paint-order:stroke;stroke:var(--bg);stroke-width:4px}
+.gl{stroke:var(--rule);stroke-width:1}.gl.ax{stroke:var(--mute);stroke-width:1.3}
+.va{stroke:var(--row);stroke-width:3}.vb{stroke:var(--col);stroke-width:3}
+.pj{stroke:var(--col);stroke-width:9;opacity:.25;stroke-linecap:round}
+.dash{stroke:var(--mute);stroke-width:1.5;stroke-dasharray:4 4}
+.arc{fill:none;stroke:var(--ink);stroke-width:1.5}
+.ln{stroke-width:2.6;fill:none}.l1{stroke:var(--row)}.l2{stroke:var(--col)}.dsh{stroke-dasharray:9 7;stroke-width:4}
+.pt{fill:var(--ink)}
+.par{fill:color-mix(in srgb,var(--row) 20%,transparent);stroke:var(--row);stroke-width:2}
+.par.flip{fill:color-mix(in srgb,var(--col) 20%,transparent);stroke:var(--col)}
+.usq{fill:none;stroke:var(--mute);stroke-dasharray:4 4}
+.cf1{fill:var(--panel);stroke:var(--ink);stroke-width:1}.cf2{fill:var(--f2);stroke:var(--ink);stroke-width:1}.cf3{fill:var(--f3);stroke:var(--ink);stroke-width:1}
+.hi{fill:var(--rowbg);stroke:var(--row);stroke-width:1.6}
+.ctrl{display:grid;grid-template-columns:auto minmax(0,1fr) 3.6em;gap:6px 12px;align-items:center;margin:12px 0}
+.ctrl label{font-size:15px;white-space:nowrap}
+.ctrl output{text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;height:44px;accent-color:var(--ink)}
+input[type=number]{font:16px Literata,serif;width:4.2em;min-height:44px;padding:6px 8px;border:1px solid var(--mute);border-radius:6px;background:var(--bg);color:var(--ink)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:15px;margin:8px 0}
+.legend i{display:inline-block;width:18px;height:3px;vertical-align:middle;margin-right:6px}
+/* bars */
+.bars{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:8px 12px;align-items:center;margin:8px 0 14px}
+.bar{height:22px;background:var(--row);border-radius:3px}
+.bars .v{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+/* dimension blocks */
+.dims{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin:10px 0}
+.blk{display:inline-block;border:2px solid var(--ink);border-radius:3px;background:var(--panel);vertical-align:middle}
+.blk.a{border-color:var(--row);background:var(--rowbg)}.blk.b{border-color:var(--col);background:var(--colbg)}
+.ok{color:var(--col);font-weight:600}.bad{color:var(--row);font-weight:600}
+.pipe{display:flex;flex-wrap:wrap;align-items:center;gap:6px;margin:8px 0 14px;font-size:15.5px}
+.pipe span{border:1px solid var(--rule);border-radius:6px;padding:4px 10px;background:var(--panel);white-space:nowrap}
+.pipe b{white-space:nowrap}
+/* types */
+.types{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,330px),1fr));gap:16px}
+.type{border:1px solid var(--rule);border-radius:10px;padding:16px;display:grid;grid-template-columns:auto minmax(0,1fr);gap:4px 16px;align-content:start}
+.type h3{margin:0;grid-column:2;font-size:19px}
+.type .pat{grid-row:1/span 3;display:inline-grid;gap:2px;align-self:start}
+.type .pat i{width:22px;height:22px;display:grid;place-items:center;font:normal 11.5px Literata,serif;border-radius:2px;background:var(--panel);color:var(--mute)}
+.type .pat i.v{background:var(--ink);color:var(--bg)}
+.type .pat i.o{background:var(--row);color:#fff}
+.type .pat i.p{background:var(--col);color:#fff}
+.type .pat i.q{background:var(--rowbg);color:var(--row)}
+.type .def{grid-column:2;margin:0;font-size:15px;color:var(--mute)}
+.type ul{grid-column:1/-1;margin:8px 0 0;padding-left:1.2em;font-size:15px}
+.type li{margin:2px 0}
+.type .gain{grid-column:1/-1;margin:6px 0 0;font-size:14.5px;border-top:1px solid var(--rule);padding-top:8px}
+/* mask */
+.mask{display:inline-grid;grid-template-columns:auto repeat(5,minmax(52px,auto));gap:3px;font-size:14px}
+.mask div{padding:8px 6px;text-align:center;border-radius:3px;white-space:nowrap}
+.mask .on{background:var(--rowbg);color:var(--row);font-weight:600}
+.mask .off{background:var(--panel);color:var(--mute)}
+.mask .hd{color:var(--mute)}
+details{border:1px solid var(--rule);border-radius:8px;padding:10px 14px;margin:8px 0}
+summary{cursor:pointer;font-weight:600;min-height:28px}
+ol.quiz>li{margin:0 0 12px}
+.cube{max-width:390px;width:100%;height:auto;display:block}
+@media(max-width:600px){table{font-size:13.5px}th,td{padding:7px 5px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:6.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6em;margin-inline-start:-6.5em;color:var(--mute);font-size:12.5px;white-space:normal}.stack td:empty{display:none}.falk .lab{font-size:13px}}
+@media(prefers-reduced-motion:reduce){.mat .cell{transition:none}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+
+<header class="band" style="border-top:0">
+<div class="wrap">
+<h1>행렬 연산 학습노트</h1>
+<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
+<div class="hero">
+  <div class="falk" aria-label="행렬곱 팔크 배치도">
+    <div class="lab">B (2×5)<br>뒤 행렬</div>
+    <div id="fB">[1 0 2 1 3; 2 1 0 3 1]</div>
+    <div id="fA">[1 2; 3 4; 5 6]</div>
+    <div id="fC">C = AB</div>
+    <div class="lab" style="align-self:start">A (3×2)<br>앞 행렬</div>
+    <div class="lab" style="align-self:start;justify-self:start;text-align:left">C (3×5) — 칸을 눌러 보세요</div>
+  </div>
+  <div class="readout">
+    <p class="big" id="hName">c<sub>21</sub> = 11</p>
+    <p>A의 <span class="rt" id="hRowN">2행</span> <span id="hRow">(3, 4)</span> · B의 <span class="ct" id="hColN">1열</span> <span id="hCol">(1, 2)</span></p>
+    <p class="sum" id="hSum">3×1 + 4×2 = 11</p>
+    <div class="btns"><button class="btn" id="play" type="button" aria-pressed="false">자동 재생</button><button class="btn" id="reset" type="button">처음 칸으로</button></div>
+    <p class="note">결과 C의 칸은 자기 <b>행 번호</b>의 A 행과 자기 <b>열 번호</b>의 B 열이 만나는 자리에 있어요. 그래서 c<sub>ij</sub> 하나 = 행 하나 · 열 하나의 내적 = 숫자 하나. 결과 칸이 15개이므로 내적도 15번, 한 번에 짝은 2쌍이에요.</p>
+  </div>
+</div>
+</div>
+</header>
+
+<nav class="scroll" aria-label="목차">
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+</nav>
+
+<section class="band" id="basics"><div class="wrap">
+<h2>행렬은 행 × 열로 읽어요</h2>
+<div class="two">
+<div>
+<p><b>행렬</b>은 숫자를 직사각형으로 배열한 것이고, 크기는 <b>행 수 × 열 수</b>로 써요. 원소 a<sub>ij</sub>는 <span class="rt">i번째 행</span>, <span class="ct">j번째 열</span>에 있는 값이에요.</p>
+<p><b>벡터</b>는 열이 하나(n×1, 열벡터)이거나 행이 하나(1×n, 행벡터)인 행렬, <b>스칼라</b>는 숫자 하나예요.</p>
+<p>R의 <code>matrix()</code>는 값을 <b>열 방향</b>으로 채워요. 눈에 보이는 순서대로 넣으려면 <code>byrow = TRUE</code>를 꼭 붙이세요. 인덱스는 1부터 시작해요.</p>
+</div>
+<div class="panel">
+<div class="eq"><span>A =</span><span data-m="1,2;3,4;5,6">[1 2; 3 4; 5 6]</span><span class="note">3행 2열 → 3×2<br>a<sub>32</sub> = 6 (3행 2열)</span></div>
+<div class="code"><pre><code>A &lt;- matrix(c(1, 2,
+              3, 4,
+              5, 6), nrow = 3, byrow = TRUE)
+dim(A)      # 3 2
+A[3, 2]     # 6   ← a32
+A[2, ]      # 3 4 ← 2행 전체
+A[, 1]      # 1 3 5 ← 1열 전체</code></pre></div>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="elementwise"><div class="wrap">
+<h2>요소 연산은 같은 자리끼리 계산해요</h2>
+<p>조건은 하나, <b>두 행렬의 크기가 같아야</b> 해요. 교환·결합·분배법칙이 모두 성립해요.</p>
+<div class="two">
+<div class="panel">
+<div class="btns" id="eBtns" role="group" aria-label="연산 선택">
+<button class="btn" type="button" data-op="add" aria-pressed="true">덧셈</button><button class="btn" type="button" data-op="sub" aria-pressed="false">뺄셈</button><button class="btn" type="button" data-op="had" aria-pressed="false">요소곱 ⊙</button><button class="btn" type="button" data-op="div" aria-pressed="false">나눗셈</button><button class="btn" type="button" data-op="sc" aria-pressed="false">스칼라곱 2A</button>
+</div>
+<div class="eq" id="eEq"></div>
+<p id="eCalc" class="note"></p>
+<div class="code"><pre><code id="eCode">A + B</code></pre></div>
+</div>
+<div>
+<h3 style="margin-top:0">요소곱(아다마르 곱) 계산 과정</h3>
+<div class="pipe"><b>|1 2| ⊙ |5 6|</b> → <span>1×5 = 5</span><span>2×6 = 12</span><span>3×7 = 21</span><span>4×8 = 32</span></div>
+<h3>R의 재활용 규칙 주의</h3>
+<p>크기가 다른 벡터와 연산하면 R은 짧은 쪽을 <b>열 방향으로 반복</b>해서 맞추고, 에러를 내지 않아요. numpy의 브로드캐스팅은 반대로 <b>행 방향</b>(마지막 축)부터 맞춰요.</p>
+<div class="code"><pre><code>A &lt;- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)
+A + c(10, 20)              # 1행에 10, 2행에 20 → 11 12 / 23 24
+sweep(A, 2, c(10, 20), "+") # 열마다 더하기     → 11 22 / 13 24</code></pre></div>
+<p class="note">AI에서 요소곱은 마스킹, LSTM의 게이트, 활성화 함수를 원소마다 적용할 때 쓰여요.</p>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="dot"><div class="wrap">
+<h2>내적은 가중합 한 번이고, 두 벡터가 얼마나 같은 쪽을 향하는지 알려줘요</h2>
+<p>a · b = a<sub>1</sub>b<sub>1</sub> + a<sub>2</sub>b<sub>2</sub> + … 결과는 <b>숫자 하나</b>예요. 기하학적으로는 a · b = |a||b| cos θ 이므로, 길이로 나누면 <b>코사인 유사도</b>가 돼요.</p>
+<div class="two">
+<div>
+<div class="fig"><svg id="cosSvg" role="img" aria-label="두 벡터와 투영"></svg></div>
+<div class="legend"><span><i style="background:var(--row)"></i>a</span><span><i style="background:var(--col)"></i>b</span><span><i style="background:var(--col);opacity:.35;height:8px"></i>b를 a 방향에 내린 그림자(투영)</span></div>
+</div>
+<div class="panel">
+<div class="ctrl">
+<label for="ta">a 방향</label><input type="range" id="ta" min="0" max="360" step="5" value="20"><output id="taO">20°</output>
+<label for="la">a 길이</label><input type="range" id="la" min="1" max="4" step="0.5" value="3"><output id="laO">3</output>
+<label for="tb">b 방향</label><input type="range" id="tb" min="0" max="360" step="5" value="70"><output id="tbO">70°</output>
+<label for="lb">b 길이</label><input type="range" id="lb" min="1" max="4" step="0.5" value="2.5"><output id="lbO">2.5</output>
+</div>
+<p class="big" id="cDot" style="font-size:30px">a · b = </p>
+<p id="cExp"></p>
+<p id="cCos"></p>
+<p id="cVer" class="ct"></p>
+<div class="btns"><button class="btn" type="button" data-pre="90">직교 만들기</button><button class="btn" type="button" data-pre="0">같은 방향</button><button class="btn" type="button" data-pre="180">반대 방향</button></div>
+</div>
+</div>
+
+<h3>가중합으로 보는 내적: 환자 위험도 점수</h3>
+<div class="two">
+<div>
+<div class="bars" id="wBars"></div>
+<p class="note">막대 = 변수마다 x × w (예시 값). 세 막대 길이의 합이 내적 x · w = 3.85예요.</p>
+</div>
+<div class="code"><pre><code>x &lt;- c(60, 140, 25)        # 나이, 혈압, BMI
+w &lt;- c(0.02, 0.01, 0.05)   # 가중치
+
+score &lt;- 0                 # 반복문 버전
+for (i in 1:length(x)) score &lt;- score + x[i] * w[i]
+
+sum(x * w)                 # 3.85  내적 버전
+x %*% w                    # 3.85  (1×1 행렬)
+crossprod(x, w)            # 3.85  BLAS 직접 호출, 가장 빠름</code></pre></div>
+</div>
+
+<h3>프로그래밍에서 내적이 필요한 이유</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>이유</th><th>내용</th><th>실제 쓰임</th></tr></thead>
+<tbody>
+<tr><td>코드가 짧아져요</td><td>변수가 3개든 1000개든 가중합이 한 줄. 인덱스 실수가 사라져요.</td><td>점수 계산, 선형회귀 예측 Xβ</td></tr>
+<tr><td>압도적으로 빨라요</td><td>정형화된 연산이라 C/Fortran BLAS, CPU SIMD, GPU가 최적화해 둠. 반복문보다 수십~수백 배.</td><td>환자 1만 명 점수를 <code>X %*% w</code> 한 번에</td></tr>
+<tr><td>유사도를 잴 수 있어요</td><td>cos θ = a·b / (|a||b|). 1 같은 방향, 0 무관(직교), −1 반대.</td><td>추천, 유사 환자 찾기, RAG 문서 검색, 어텐션 QKᵀ</td></tr>
+<tr><td>신경망의 기본 단위예요</td><td>뉴런 하나 = 활성화(x · w + b). 한 층 = 행렬 × 벡터, 배치 = 행렬 × 행렬.</td><td>MLP, CNN, 트랜스포머</td></tr>
+<tr><td>직교·투영을 판정해요</td><td>내적 0이면 수직. 투영은 (a·b/|a|²)a.</td><td>PCA, 회귀, 3D 그래픽 조명, 공분산·상관계수</td></tr>
+</tbody></table></div>
+<div class="code"><pre><code>cos_sim &lt;- function(a, b) sum(a * b) / (sqrt(sum(a^2)) * sqrt(sum(b^2)))
+cos_sim(c(1, 2, 3), c(2, 4, 6))    # 1  같은 방향
+cos_sim(c(1, 2, 3), c(3, 0, -1))   # 0  직교 (3 + 0 - 3 = 0)
+
+h &lt;- pmax(0, x %*% W + b)          # 뉴런 층 하나: ReLU(xW + b)</code></pre></div>
+</div></section>
+
+<section class="band" id="matmul"><div class="wrap">
+<h2>행렬곱은 내적을 결과 칸 수만큼 묶어서 한 번에 해요</h2>
+<div class="two">
+<div>
+<p>c<sub>ij</sub> = Σ<sub>k</sub> a<sub>ik</sub> b<sub>kj</sub> = <span class="rt">A의 i행</span> · <span class="ct">B의 j열</span>. 결과 원소 개수 = 내적 횟수예요.</p>
+<h3 style="margin-top:.4em">곱할 수 있는지 바로 확인하기</h3>
+<div class="panel">
+<div class="dims">
+<span class="rt">A</span><input type="number" id="dm" min="1" max="8" value="3" aria-label="A의 행"><span>×</span><input type="number" id="dn" min="1" max="8" value="2" aria-label="A의 열">
+<span class="op">·</span>
+<span class="ct">B</span><input type="number" id="dn2" min="1" max="8" value="2" aria-label="B의 행"><span>×</span><input type="number" id="dp" min="1" max="8" value="5" aria-label="B의 열">
+</div>
+<div class="dims" id="dBlk"></div>
+<p id="dOut"></p>
+<p id="dRev" class="note"></p>
+</div>
+<h3>손계산 요령</h3>
+<p>① 크기부터 적고 결과 크기를 정해요. ② 결과 칸을 빈칸으로 그려요. ③ c<sub>ij</sub>를 고르면 A의 i행에 가로줄, B의 j열에 세로줄을 긋고 같은 순서끼리 곱해 더해요. ④ 한 행을 끝내고 다음 행으로 내려가요.</p>
+</div>
+<div>
+<h3 style="margin-top:0">2×2 예시</h3>
+<div class="eq"><span data-m="1,2;3,4">A</span><span data-m="5,6;7,8">B</span><span class="op">=</span><span data-m="19,22;43,50">AB</span></div>
+<div class="pipe"><span>c<sub>11</sub> = 1×5 + 2×7 = 19</span><span>c<sub>12</sub> = 1×6 + 2×8 = 22</span><span>c<sub>21</sub> = 3×5 + 4×7 = 43</span><span>c<sub>22</sub> = 3×6 + 4×8 = 50</span></div>
+<div class="tbl"><table>
+<thead><tr><th>성질</th><th>성립?</th></tr></thead>
+<tbody>
+<tr><td>교환법칙 AB = BA</td><td><span class="bad">✗</span> BA = (23 34 / 31 46)</td></tr>
+<tr><td>결합법칙 (AB)C = A(BC)</td><td><span class="ok">✓</span></td></tr>
+<tr><td>분배법칙 A(B + C) = AB + AC</td><td><span class="ok">✓</span></td></tr>
+<tr><td>항등행렬 AI = IA = A</td><td><span class="ok">✓</span></td></tr>
+<tr><td>(AB)ᵀ = BᵀAᵀ, (AB)⁻¹ = B⁻¹A⁻¹</td><td><span class="ok">✓</span> 순서가 뒤집혀요</td></tr>
+</tbody></table></div>
+</div>
+</div>
+
+<h3>요소곱과 행렬곱 비교</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>구분</th><th>요소곱 A ⊙ B</th><th>행렬곱 AB</th></tr></thead>
+<tbody>
+<tr><td>계산</td><td>같은 위치끼리 곱함</td><td>행 · 열 내적</td></tr>
+<tr><td>크기 조건</td><td>두 행렬 크기가 같음</td><td>앞의 열 수 = 뒤의 행 수</td></tr>
+<tr><td>결과 크기</td><td>원래 크기 그대로</td><td>앞의 행 수 × 뒤의 열 수</td></tr>
+<tr><td>교환법칙</td><td>성립</td><td>불성립</td></tr>
+<tr><td>R / Python</td><td><code>A * B</code> / <code>A * B</code></td><td><code>A %*% B</code> / <code>A @ B</code></td></tr>
+<tr><td>AI에서</td><td>마스킹, 게이트, 활성화</td><td>층 연결 XW + b, 어텐션</td></tr>
+</tbody></table></div>
+<p class="note">위 배치도의 3×2 × 2×5 계산은 환자 3명 × 변수 2개 데이터에 입력 2개 → 은닉 뉴런 5개 가중치를 곱하는 것과 같은 모양이에요. C의 각 행이 환자 한 명의 은닉층 값 5개예요.</p>
+</div></section>
+
+<section class="band" id="order"><div class="wrap">
+<h2>순서를 바꾸면 짝이 남거나, 입력과 출력이 맞지 않아요</h2>
+<div class="two">
+<div>
+<h3 style="margin-top:0">계산 관점: 짝이 남아요</h3>
+<div class="pipe"><b>AB</b> <span class="rt">A의 1행 (1, 2)</span> · <span class="ct">B의 1열 (1, 2)</span> = 1×1 + 2×2 = 5 <span class="ok">✓</span></div>
+<div class="pipe"><b>BA</b> <span class="rt">B의 1행 (1, 0, 2, 1, 3)</span> · <span class="ct">A의 1열 (1, 3, 5)</span> → 1×1 + 0×3 + 2×5 + 1×? + 3×? <span class="bad">✗</span></div>
+<p>행에는 값이 5개, 열에는 3개라 1:1 짝을 지을 수 없어요. 그래서 <b>앞 행렬 한 행의 길이(열 수) = 뒤 행렬 한 열의 길이(행 수)</b>가 조건이에요.</p>
+<h3>의미 관점: 행렬은 함수예요</h3>
+<p>B(2×5)는 5차원을 받아 2차원을 내보내고, A(3×2)는 2차원을 받아 3차원을 내보내요. AB는 <b>오른쪽부터</b> B를 먼저, 그다음 A를 적용해요.</p>
+<div class="pipe"><b>AB</b><span>5차원</span>→ B →<span>2차원</span>→ A →<span>3차원</span><span class="ok">✓ 출력 2 = 입력 2</span></div>
+<div class="pipe"><b>BA</b><span>2차원</span>→ A →<span>3차원</span>→ B →<span>?</span><span class="bad">✗ 출력 3 ≠ 입력 5</span></div>
+</div>
+<div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>경우</th><th>예시</th><th>AB</th><th>BA</th></tr></thead>
+<tbody>
+<tr><td>한쪽만 맞음</td><td>3×2, 2×5</td><td>3×5</td><td><span class="bad">불가능</span></td></tr>
+<tr><td>양쪽 다 맞음</td><td>3×2, 2×3</td><td>3×3</td><td>2×2, 크기부터 다름</td></tr>
+<tr><td>같은 크기 정방</td><td>2×2, 2×2</td><td>가능</td><td>가능, 값이 대개 다름</td></tr>
+</tbody></table></div>
+<p>정방행렬처럼 둘 다 계산되어도 AB ≠ BA인 이유는 "B 다음 A"와 "A 다음 B"가 다른 작업이기 때문이에요. 양말 다음 신발, 신발 다음 양말처럼요.</p>
+<div class="code"><pre><code>B %*% A   # Error: non-conformable arguments</code></pre></div>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="three"><div class="wrap">
+<h2>3차원: 3×3 행렬곱은 짝이 3쌍, 3×3×3 텐서는 축을 골라 축약해요</h2>
+<div class="two">
+<div>
+<h3 style="margin-top:0">3×3 행렬곱</h3>
+<div class="eq"><span data-m="1,2,0;0,1,3;2,0,1">A</span><span data-m="1,0,2;3,1,0;0,2,1">B</span><span class="op">=</span><span data-m="7,2,2;3,7,3;2,2,5">AB</span></div>
+<p>예: c<sub>11</sub> = (1, 2, 0) · (1, 3, 0) = 1 + 6 + 0 = 7. 3×3 행렬은 3차원 공간의 점을 옮겨요: A·(1, 1, 1) = (3, 4, 3).</p>
+<p><b>3×3 행렬식</b>은 첫 행 전개, 부호 + − +:<br>det A = 1(1·1 − 3·0) − 2(0·1 − 3·2) + 0 = 1 + 12 = <b>13</b></p>
+<h3>3×3×3 텐서 (축 A, B, Z)</h3>
+<p>축이 세 개라서 <b>어느 축끼리 짝지을지</b> 정해야 해요(텐서 축약). 규칙: ① 짝지을 축의 길이가 같고 ② 그 축 방향으로 곱해 더하면 축이 사라지고 ③ 남은 축이 이어 붙어 결과 모양이 돼요.</p>
+<p class="note">결과 차원 수 = 3 + 3 − 2 × (축약한 축 수). 행렬곱은 2 + 2 − 2 = 2라서 계속 행렬이었어요.</p>
+</div>
+<div>
+<svg class="cube" id="cube" viewBox="0 0 390 310" role="img" aria-label="3×3×3 텐서와 Z축 방향 한 줄"></svg>
+<p class="note">빨간 줄 = T[1, 1, ·], Z축 방향으로 읽은 값 (1, 10, 19). 1~27을 R 순서로 채운 텐서 기준이에요.</p>
+</div>
+</div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>축약하는 축</th><th>계산</th><th>결과 모양</th><th>원소 하나당 곱셈</th><th>예시 값</th></tr></thead>
+<tbody>
+<tr><td>없음</td><td>원소별 곱 T ⊙ S</td><td>3×3×3</td><td class="n">1</td><td></td></tr>
+<tr><td>1개, 벡터와</td><td>Z축 가중합, v = (1, 0, 2)</td><td>3×3</td><td class="n">3</td><td>R[1,1] = 1×1 + 10×0 + 19×2 = 39</td></tr>
+<tr><td>1개, 텐서와</td><td>T의 Z축 · S의 A축</td><td>3×3×3×3</td><td class="n">3</td><td>C[1,1,1,1] = 1×1 + 10×2 + 19×3 = 78</td></tr>
+<tr><td>2개</td><td>T의 (B, Z) · S의 (A, B)</td><td>3×3</td><td class="n">9</td><td>D[1,1] = 765</td></tr>
+<tr><td>3개 전부</td><td>모든 원소 곱의 합</td><td>스칼라</td><td class="n">27</td><td></td></tr>
+</tbody></table></div>
+<div class="two">
+<div class="code"><pre><code>T &lt;- array(1:27, dim = c(3, 3, 3)); S &lt;- T
+v &lt;- c(1, 0, 2)
+R &lt;- T[, , 1]*v[1] + T[, , 2]*v[2] + T[, , 3]*v[3]   # 39 48 57 / ...
+
+C &lt;- array(matrix(T, nrow = 9) %*% matrix(S, nrow = 3),
+           dim = c(3, 3, 3, 3)); C[1, 1, 1, 1]       # 78
+D &lt;- matrix(T, nrow = 3) %*% matrix(S, ncol = 3)     # 765 ...</code></pre></div>
+<div class="code"><pre><code>import numpy as np
+T = np.arange(1, 28).reshape((3, 3, 3), order='F'); S = T
+np.einsum('abz,z->ab',     T, np.array([1, 0, 2]))
+np.einsum('abk,kxy->abxy', T, S)    # (3,3,3,3)
+np.einsum('abz,bzy->ay',   T, S)    # (3,3)
+# 양쪽에 나오고 화살표 뒤에 없는 글자 = 축약되는 축</code></pre></div>
+</div>
+<p class="note">배치 행렬곱 (배치, m, n) × (배치, n, p) = (배치, m, p)는 첫 축을 그대로 두고 2차원 행렬곱을 배치 수만큼 반복하는 특수한 경우예요. 세 행렬의 곱 A × B × Z는 (AB)Z처럼 두 번 나눠 계산하고, 결합법칙 덕분에 어느 쪽부터 해도 같아요.</p>
+</div></section>
+
+<section class="band" id="det"><div class="wrap">
+<h2>행렬식은 넓이가 몇 배가 되는지, 0이면 역행렬이 없어요</h2>
+<div class="two">
+<div>
+<div class="fig"><svg id="detSvg" role="img" aria-label="단위 정사각형이 평행사변형으로 바뀌는 그림"></svg></div>
+<p class="note">점선 정사각형(넓이 1)이 행렬을 곱하면 색칠한 평행사변형이 돼요. 1열 (a, c)와 2열 (b, d)가 두 변이에요. 파란색이면 방향이 뒤집힌 것(det &lt; 0)이에요.</p>
+</div>
+<div class="panel">
+<div class="eq" id="detM"></div>
+<div class="ctrl">
+<label for="ra">a</label><input type="range" id="ra" min="-3" max="3" step="0.5" value="2"><output id="raO">2</output>
+<label for="rb">b</label><input type="range" id="rb" min="-3" max="3" step="0.5" value="1"><output id="rbO">1</output>
+<label for="rc">c</label><input type="range" id="rc" min="-3" max="3" step="0.5" value="1"><output id="rcO">1</output>
+<label for="rd">d</label><input type="range" id="rd" min="-3" max="3" step="0.5" value="3"><output id="rdO">3</output>
+</div>
+<p class="big" id="detV" style="font-size:30px"></p>
+<p id="detT"></p>
+<div class="eq" id="invM"></div>
+<div class="btns"><button class="btn" type="button" id="mkSing">det = 0 만들기</button><button class="btn" type="button" id="mkBack">처음 값</button></div>
+</div>
+</div>
+<div class="two">
+<div>
+<h3>전치 Aᵀ</h3>
+<p>행과 열을 맞바꿔요. (m×n) → (n×m). 어떤 행렬이든 AᵀA와 AAᵀ는 대칭행렬이에요.</p>
+<h3>역행렬 A⁻¹ (2×2) 만드는 순서</h3>
+<p>① a와 d 자리 바꾸기 ② b와 c 부호 바꾸기 ③ 1/det 곱하기. AA⁻¹ = I가 나오면 맞게 구한 거예요. 성질: det(AB) = det A · det B, det Aᵀ = det A.</p>
+</div>
+<div class="code" style="margin-top:1.4em"><pre><code>A &lt;- matrix(c(1, 2, 3, 4), nrow = 2, byrow = TRUE)
+t(A)              # 전치
+det(A)            # -2
+solve(A)          # -2 1 / 1.5 -0.5
+A %*% solve(A)    # 항등행렬이면 정답</code></pre></div>
+</div>
+</div></section>
+
+<section class="band" id="systems"><div class="wrap">
+<h2>연립방정식은 Ax = b, 해는 두 직선이 만나는 점이에요</h2>
+<div class="two">
+<div>
+<div class="fig"><svg id="lineSvg" role="img" aria-label="2x+y=5와 x+3y=10의 교점"></svg></div>
+<div class="legend"><span><i style="background:var(--row)"></i>2x + y = 5</span><span><i style="background:var(--col)"></i>x + 3y = 10</span><span>교점 (1, 3)</span></div>
+</div>
+<div>
+<div class="eq"><span data-m="2,1;1,3">A</span><span data-m="0;0" id="xv">x</span><span class="op">=</span><span data-m="5;10">b</span></div>
+<p class="note">x 벡터 자리는 (x, y)예요.</p>
+<h3 style="margin-top:.6em">방법 ① 역행렬: x = A⁻¹b</h3>
+<p>det A = 2·3 − 1·1 = 5, A⁻¹ = ⅕(3 −1 / −1 2)<br>x = ⅕(3·5 − 1·10, −1·5 + 2·10) = ⅕(5, 15) = <b>(1, 3)</b><br><span class="note">A⁻¹은 반드시 왼쪽에. bA⁻¹은 크기가 맞지 않아요.</span></p>
+<h3>방법 ② 크래머 공식</h3>
+<p>구하려는 변수의 열을 b로 바꾼 행렬식 ÷ det A<br>x = det(<b>5</b> 1 / <b>10</b> 3) ÷ 5 = (15 − 10) ÷ 5 = 1<br>y = det(2 <b>5</b> / 1 <b>10</b>) ÷ 5 = (20 − 5) ÷ 5 = 3</p>
+</div>
+</div>
+
+<h3>방법 ③ 가우스 소거법 (변수 3개 이상일 때 주로 씀)</h3>
+<div class="two">
+<div class="panel">
+<p style="font-size:15px">x + y + z = 6, &nbsp;2x + y − z = 1, &nbsp;x − y + 2z = 5</p>
+<div class="eq" id="gMat"></div>
+<p id="gNote" class="sum" style="font-size:18px"></p>
+<div class="btns"><button class="btn" type="button" id="gPrev">이전</button><button class="btn" type="button" id="gNext">다음 단계</button><span class="note" id="gStep" style="align-self:center"></span></div>
+</div>
+<div>
+<p><b>기본 행 연산 세 가지</b>만 써요: 두 행 바꾸기, 한 행에 0이 아닌 수 곱하기, 한 행에 다른 행의 몇 배 더하기.</p>
+<p>목표는 대각선 아래를 0으로 만든 <b>상삼각 형태</b>예요. 그다음 맨 아래 식부터 거꾸로 대입(후진대입)하면 답이 나와요. R의 <code>solve(A, b)</code>도 내부적으로 이 계열(LU 분해)을 써서, 역행렬을 직접 구하는 것보다 빠르고 정확해요.</p>
+<div class="code"><pre><code>A3 &lt;- matrix(c(1,  1,  1,
+               2,  1, -1,
+               1, -1,  2), nrow = 3, byrow = TRUE)
+b3 &lt;- c(6, 1, 5)
+solve(A3, b3)                 # 1 2 3
+qr(A3)$rank                   # 3
+qr(cbind(A3, b3))$rank        # 3 → 해가 하나</code></pre></div>
+</div>
+</div>
+
+<h3>해의 개수 판별</h3>
+<div class="types" style="grid-template-columns:repeat(auto-fit,minmax(min(100%,240px),1fr))">
+<div><div class="fig sm"><svg id="case1" role="img" aria-label="한 점에서 만남"></svg></div><p><b>해가 하나</b> · det ≠ 0<br><span class="note">2x + y = 5, x + 3y = 10 → 한 점</span></p></div>
+<div><div class="fig sm"><svg id="case2" role="img" aria-label="두 직선이 겹침"></svg></div><p><b>해가 무수히 많음</b> · det = 0, 모순 없음<br><span class="note">x + y = 2, 2x + 2y = 4 → 같은 직선</span></p></div>
+<div><div class="fig sm"><svg id="case3" role="img" aria-label="두 직선이 평행"></svg></div><p><b>해가 없음</b> · det = 0, 모순<br><span class="note">x + y = 2, 2x + 2y = 5 → 평행선</span></p></div>
+</div>
+<p><b>rank로 판별</b> (n = 변수 개수): rank(A) = rank([A|b]) = n → 하나, rank(A) = rank([A|b]) &lt; n → 무수히 많음, rank(A) &lt; rank([A|b]) → 없음.</p>
+</div></section>
+
+<section class="band" id="types"><div class="wrap">
+<h2>행렬의 종류: 모양을 알면 더 빠른 함수, 더 적은 메모리, 미리 보이는 문제</h2>
+<p>각 그림은 4×4 기준의 생김새예요. 검은 칸 = 임의의 값, 빈 칸 = 0, 빨강 = 1 또는 특별한 값.</p>
+<div class="types" id="typeGrid"></div>
+
+<h3>GPT 인과 마스크 = 하삼각 행렬</h3>
+<div class="two">
+<div class="scroll"><div class="mask" id="mask"></div></div>
+<div>
+<p>문장을 생성할 때 각 단어는 <b>자기와 앞 단어만</b> 봐야 해요. 어텐션 점수 QKᵀ에서 대각선 위(미래)를 −∞로 바꾸면 softmax 뒤에 0이 되어 가려져요.</p>
+<div class="code"><pre><code>n &lt;- 5
+mask &lt;- lower.tri(matrix(0, n, n), diag = TRUE)
+scores &lt;- matrix(rnorm(n * n), n)   # QKᵀ
+scores[!mask] &lt;- -Inf               # 미래를 가림</code></pre></div>
+</div>
+</div>
+
+<h3>실무에서 자주 만나는 행렬 더 보기</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>행렬</th><th>정의</th><th>사용처</th></tr></thead>
+<tbody>
+<tr><td>희소행렬</td><td>대부분이 0</td><td>추천(사용자×상품), TF-IDF, 그래프. R <code>Matrix</code> 패키지로 0 아닌 값만 저장</td></tr>
+<tr><td>양정치행렬</td><td>모든 고윳값 &gt; 0</td><td>공분산, 촐레스키, 볼록 최적화(최솟값 하나)</td></tr>
+<tr><td>순열행렬</td><td>각 행·열에 1이 하나</td><td>데이터 섞기, 정렬, LU 분해 피벗 교환</td></tr>
+<tr><td>전이(확률)행렬</td><td>각 행의 합 = 1</td><td>마르코프 체인, PageRank, HMM</td></tr>
+<tr><td>토플리츠 행렬</td><td>대각선 방향 값이 같음</td><td>1D 합성곱을 행렬곱으로, 시계열</td></tr>
+</tbody></table></div>
+<div class="two">
+<div class="code"><pre><code># 마르코프 체인: 건강, 경증, 중증
+P &lt;- matrix(c(0.8, 0.15, 0.05,
+              0.3, 0.5,  0.2,
+              0.1, 0.3,  0.6), nrow = 3, byrow = TRUE)
+c(1, 0, 0) %*% P %*% P %*% P   # 3단계 뒤 확률
+
+# 다중공선성: x2 = 2 * x1
+df &lt;- data.frame(x1 = 1:10, y = rnorm(10)); df$x2 &lt;- df$x1 * 2
+lm(y ~ x1 + x2, data = df)     # x2 계수가 NA</code></pre></div>
+<div class="code"><pre><code># 직교행렬: 역행렬 = 전치
+Q &lt;- qr.Q(qr(matrix(rnorm(9), 3)))
+round(t(Q) %*% Q, 10)          # 항등행렬
+
+# 촐레스키로 상관 0.8 데이터 만들기
+Sigma &lt;- matrix(c(1, 0.8, 0.8, 1), nrow = 2)
+L &lt;- t(chol(Sigma))            # chol()은 상삼각을 줌
+X &lt;- t(L %*% matrix(rnorm(2000), nrow = 2)); cor(X)
+
+# 릿지 회귀
+solve(t(X) %*% X + 0.1 * diag(ncol(X)), t(X) %*% y)</code></pre></div>
+</div>
+<p class="note">오늘 범위에서는 대각·삼각·대칭·직교 네 가지가 가장 자주 나와요. 의료 데이터에서는 키, 몸무게, BMI를 함께 넣으면 다중공선성(특이행렬)이 생기기 쉬워요.</p>
+</div></section>
+
+<section class="band" id="cheat"><div class="wrap">
+<h2>R 명령어 한 장 정리</h2>
+<div class="two">
+<div class="code"><pre><code>A %*% B        # 행렬곱
+A * B          # 요소곱 (+ - / ^ 도 요소 연산)
+t(A)           # 전치
+diag(3)        # 3×3 항등행렬
+diag(c(2, 5))  # 대각행렬
+diag(A)        # 대각 원소
+sum(diag(A))   # trace
+det(A)         # 행렬식
+solve(A)       # 역행렬
+solve(A, b)    # Ax = b 풀기 (권장)
+qr(A)$rank     # 계수
+kappa(A)       # 조건수 (크면 불안정)</code></pre></div>
+<div class="code"><pre><code>crossprod(X)          # t(X) %*% X, 빠름
+crossprod(x, w)       # 내적
+sweep(A, 2, v, "+")   # 열마다 연산
+lower.tri(A); upper.tri(A); isSymmetric(A)
+eigen(S, symmetric = TRUE)   # 고윳값 분해
+svd(A)                # 특이값 분해 $d $u $v
+qr(A); chol(S)        # QR, 촐레스키
+cov(X); cor(X)        # 공분산, 상관 (대칭)
+prcomp(X, scale. = TRUE)     # PCA
+dist(X); hclust(dist(X))     # 거리행렬, 군집
+array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
+</div>
+</div></section>
+
+<section class="band" id="quiz"><div class="wrap">
+<h2>확인 문제</h2>
+<div class="two">
+<div>
+<div class="eq"><span>C =</span><span data-m="2,0;1,3">C</span><span>D =</span><span data-m="1,4;2,1">D</span></div>
+<ol class="quiz">
+<li>C ⊙ D (요소곱)를 구하세요.</li>
+<li>CD (행렬곱)를 구하세요. c<sub>21</sub>은 어느 행과 어느 열의 내적인가요?</li>
+<li>det C와 C⁻¹을 구하세요.</li>
+<li>x + 2y = 8, 3x − y = 3을 풀어보세요.</li>
+<li>(3×4) × (4×2)의 결과 크기는? 반대 순서로 곱할 수 있나요?</li>
+<li>a = (1, 2), b = (−2, 1)의 내적과 두 벡터의 관계는?</li>
+<li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
+</ol>
+</div>
+<div>
+<details><summary>1 · 2번 정답</summary><p>1. (2 0 / 2 3)<br>2. (2·1+0·2, 2·4+0·1 / 1·1+3·2, 1·4+3·1) = (2 8 / 7 7). c<sub>21</sub> = C의 2행 (1, 3) · D의 1열 (1, 2) = 7</p></details>
+<details><summary>3 · 4번 정답</summary><p>3. det C = 6 − 0 = 6, C⁻¹ = ⅙(3 0 / −1 2)<br>4. x = 2, y = 3 (det = −1 − 6 = −7, 크래머: x = (−8 − 6)/−7 = 2)</p></details>
+<details><summary>5 · 6 · 7번 정답</summary><p>5. (3×2). 반대는 (4×2)(3×4)에서 2 ≠ 3이라 불가능<br>6. 1×(−2) + 2×1 = 0 → 직교<br>7. 3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
+<div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
+D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
+C * D; C %*% D; det(C); solve(C)
+solve(matrix(c(1, 2, 3, -1), nrow = 2, byrow = TRUE), c(8, 3))</code></pre></div>
+</div>
+</div>
+</div></section>
+
+<script>
+{
+const $=s=>document.querySelector(s);
+const $$=s=>[...document.querySelectorAll(s)];
+const fmt=x=>{if(Math.abs(x)<1e-9)return '0';const r=Math.round(x);return Math.abs(x-r)<1e-9?String(r):String(+x.toFixed(3))};
+const neg=x=>x<0?'('+fmt(x)+')':fmt(x);
+const motionOK=!matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+function matHTML(M,o={}){
+  const n=M[0].length,t=o.btn?'button':'span';
+  let h='<div class="mat'+(o.sm?' sm':'')+(o.aug?' aug':'')+'" style="--n:'+n+'">';
+  M.forEach((row,i)=>row.forEach((v,j)=>{
+    h+='<'+t+' class="cell" data-i="'+i+'" data-j="'+j+'"'+(o.btn?' type="button" aria-label="c'+(i+1)+(j+1)+' = '+fmt(v)+'"':'')+'>'+(typeof v==='number'?fmt(v):v)+'</'+t+'>';
+  }));
+  return h+'</div>';
+}
+const mul=(X,Y)=>X.map(r=>Y[0].map((_,j)=>r.reduce((s,v,k)=>s+v*Y[k][j],0)));
+
+/* static matrices */
+$$('[data-m]').forEach(el=>{
+  const M=el.dataset.m.split(';').map(r=>r.split(',').map(v=>isNaN(+v)?v:+v));
+  if(el.id==='xv'){el.outerHTML=matHTML([['x'],['y']],{sm:1});return}
+  el.outerHTML=matHTML(M,{sm:1});
+});
+
+/* hero: Falk scheme */
+const A=[[1,2],[3,4],[5,6]],B=[[1,0,2,1,3],[2,1,0,3,1]],C=mul(A,B);
+$('#fA').innerHTML=matHTML(A);$('#fB').innerHTML=matHTML(B);$('#fC').innerHTML=matHTML(C,{btn:1});
+let cur=[1,0],timer=null;
+function pick(i,j){
+  $$('.falk .cell').forEach(c=>c.classList.remove('r','k','sel'));
+  $$('#fA .cell').forEach(c=>{if(+c.dataset.i===i)c.classList.add('r')});
+  $$('#fB .cell').forEach(c=>{if(+c.dataset.j===j)c.classList.add('k')});
+  const cc=document.querySelector('#fC .cell[data-i="'+i+'"][data-j="'+j+'"]');
+  if(cc)cc.classList.add('sel');
+  const row=A[i],col=B.map(r=>r[j]);
+  $('#hName').innerHTML='c<sub>'+(i+1)+(j+1)+'</sub> = '+C[i][j];
+  $('#hRowN').textContent=(i+1)+'행';$('#hRow').textContent='('+row.join(', ')+')';
+  $('#hColN').textContent=(j+1)+'열';$('#hCol').textContent='('+col.join(', ')+')';
+  $('#hSum').innerHTML=row.map((v,k)=>'<span class="rt">'+v+'</span>×<span class="ct">'+col[k]+'</span>').join(' + ')+' = <b>'+C[i][j]+'</b>';
+  cur=[i,j];
+}
+function stop(){if(timer){clearInterval(timer);timer=null}$('#play').setAttribute('aria-pressed','false');$('#play').textContent='자동 재생'}
+function step(){let k=cur[0]*5+cur[1]+1;if(k>=15)k=0;pick(Math.floor(k/5),k%5)}
+$('#fC').addEventListener('click',e=>{const b=e.target.closest('.cell');if(b){stop();pick(+b.dataset.i,+b.dataset.j)}});
+$('#fC').addEventListener('mouseover',e=>{const b=e.target.closest('.cell');if(b&&!timer)pick(+b.dataset.i,+b.dataset.j)});
+$('#fC').addEventListener('focusin',e=>{const b=e.target.closest('.cell');if(b&&!timer)pick(+b.dataset.i,+b.dataset.j)});
+$('#play').addEventListener('click',()=>{if(timer){stop();return}$('#play').setAttribute('aria-pressed','true');$('#play').textContent='멈춤';step();timer=setInterval(step,motionOK?1100:2200)});
+$('#reset').addEventListener('click',()=>{stop();pick(0,0)});
+pick(1,0);
+
+/* element-wise */
+const EA=[[1,2],[3,4]],EB=[[5,6],[7,8]];
+const ops={add:['+','+',(a,b)=>a+b,'A + B'],sub:['−','−',(a,b)=>a-b,'A - B'],had:['⊙','×',(a,b)=>a*b,'A * B'],div:['÷','÷',(a,b)=>a/b,'A / B']};
+function renderE(op){
+  $$('#eBtns .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.op===op)));
+  if(op==='sc'){
+    const R=EA.map(r=>r.map(v=>2*v));
+    $('#eEq').innerHTML='<span class="op">2 ×</span>'+matHTML(EA,{sm:1})+'<span class="op">=</span>'+matHTML(R,{sm:1});
+    $('#eCalc').textContent=EA.flat().map(v=>'2×'+v+' = '+2*v).join(',  ');
+    $('#eCode').textContent='2 * A';return;
+  }
+  const [s,cs,f,code]=ops[op];
+  const R=EA.map((r,i)=>r.map((v,j)=>f(v,EB[i][j])));
+  $('#eEq').innerHTML=matHTML(EA,{sm:1})+'<span class="op">'+s+'</span>'+matHTML(EB,{sm:1})+'<span class="op">=</span>'+matHTML(R,{sm:1});
+  $('#eCalc').textContent=EA.flat().map((v,k)=>v+cs+EB.flat()[k]+' = '+fmt(R.flat()[k])).join(',  ');
+  $('#eCode').textContent=code+(op==='had'?'   # 행렬곱이 아님! 행렬곱은 A %*% B':'');
+}
+$('#eBtns').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b)renderE(b.dataset.op)});
+renderE('add');
+
+/* weighted bars */
+const W=[['나이',60,0.02],['혈압',140,0.01],['BMI',25,0.05]];
+const mx=Math.max(...W.map(w=>w[1]*w[2]));
+$('#wBars').innerHTML=W.map(w=>'<span>'+w[0]+' <span class="note">'+w[1]+'×'+w[2]+'</span></span><div class="bar" style="width:'+(w[1]*w[2]/mx*100).toFixed(1)+'%"></div><span class="v">'+(w[1]*w[2]).toFixed(2)+'</span>').join('')+'<span><b>합 x · w</b></span><span></span><span class="v"><b>3.85</b></span>';
+
+/* plotting helpers */
+const draws=new Map();
+const ro=new ResizeObserver(es=>es.forEach(e=>{const f=draws.get(e.target);if(f)f()}));
+const reg=(el,fn)=>{draws.set(el,fn);ro.observe(el);fn()};
+function frame(s,x0,x1,y0,y1,m){
+  m=m||26;const Wd=s.clientWidth||300,Ht=s.clientHeight||300;
+  const sc=Math.min((Wd-2*m)/(x1-x0),(Ht-2*m)/(y1-y0));
+  const ox=(Wd-sc*(x1-x0))/2,oy=(Ht-sc*(y1-y0))/2;
+  const X=x=>ox+(x-x0)*sc,Y=y=>Ht-oy-(y-y0)*sc;
+  let g='';
+  for(let x=Math.ceil(x0);x<=x1;x++)g+='<line class="gl'+(x===0?' ax':'')+'" x1="'+X(x)+'" x2="'+X(x)+'" y1="'+Y(y0)+'" y2="'+Y(y1)+'"/>';
+  for(let y=Math.ceil(y0);y<=y1;y++)g+='<line class="gl'+(y===0?' ax':'')+'" y1="'+Y(y)+'" y2="'+Y(y)+'" x1="'+X(x0)+'" x2="'+X(x1)+'"/>';
+  return {X,Y,sc,g,Wd,Ht};
+}
+const marker=(id,v)=>'<marker id="'+id+'" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" style="fill:var('+v+')"/></marker>';
+
+/* cosine */
+const cs=$('#cosSvg');
+function drawCos(){
+  const ta=+$('#ta').value,tb=+$('#tb').value,la=+$('#la').value,lb=+$('#lb').value;
+  $('#taO').textContent=ta+'°';$('#tbO').textContent=tb+'°';$('#laO').textContent=la;$('#lbO').textContent=lb;
+  const ra=ta*Math.PI/180,rb=tb*Math.PI/180;
+  const a=[la*Math.cos(ra),la*Math.sin(ra)],b=[lb*Math.cos(rb),lb*Math.sin(rb)];
+  const dot=a[0]*b[0]+a[1]*b[1],k=dot/(la*la),p=[a[0]*k,a[1]*k];
+  const cos=Math.max(-1,Math.min(1,dot/(la*lb))),th=Math.acos(cos)*180/Math.PI;
+  const f=frame(cs,-4.5,4.5,-4.5,4.5);
+  let dd=((rb-ra)%(2*Math.PI)+3*Math.PI)%(2*Math.PI)-Math.PI,arc='';
+  for(let t=0;t<=24;t++){const an=ra+dd*t/24;arc+=(t?'L':'M')+f.X(0.8*Math.cos(an)).toFixed(1)+' '+f.Y(0.8*Math.sin(an)).toFixed(1)}
+  const lab=(v,txt)=>{const L=Math.hypot(v[0],v[1])||1;return '<text x="'+(f.X(v[0])+v[0]/L*16)+'" y="'+(f.Y(v[1])-v[1]/L*16+5)+'" text-anchor="middle">'+txt+'</text>'};
+  cs.innerHTML='<defs>'+marker('mA','--row')+marker('mB','--col')+'</defs>'+f.g+
+    '<line class="pj" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(p[0])+'" y2="'+f.Y(p[1])+'"/>'+
+    '<line class="dash" x1="'+f.X(b[0])+'" y1="'+f.Y(b[1])+'" x2="'+f.X(p[0])+'" y2="'+f.Y(p[1])+'"/>'+
+    '<path class="arc" d="'+arc+'"/>'+
+    '<line class="va" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(a[0])+'" y2="'+f.Y(a[1])+'" marker-end="url(#mA)"/>'+
+    '<line class="vb" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(b[0])+'" y2="'+f.Y(b[1])+'" marker-end="url(#mB)"/>'+
+    lab(a,'a')+lab(b,'b');
+  const r2=v=>Math.round(v*100)/100;
+  $('#cDot').textContent='a · b = '+fmt(r2(dot));
+  $('#cExp').innerHTML='a = ('+fmt(r2(a[0]))+', '+fmt(r2(a[1]))+'), b = ('+fmt(r2(b[0]))+', '+fmt(r2(b[1]))+')<br>'+fmt(r2(a[0]))+'×'+neg(r2(b[0]))+' + '+fmt(r2(a[1]))+'×'+neg(r2(b[1]))+' = '+fmt(r2(dot));
+  $('#cCos').innerHTML='cos θ = '+fmt(r2(dot))+' ÷ ('+la+'×'+lb+') = <b>'+cos.toFixed(2)+'</b>, θ = '+Math.round(th)+'°';
+  $('#cVer').textContent=cos>0.97?'거의 같은 방향: 매우 비슷함':Math.abs(cos)<0.03?'직교: 내적 ≈ 0, 서로 무관':cos<-0.97?'반대 방향':cos>0?'같은 쪽을 향함 (내적 양수)':'반대쪽을 향함 (내적 음수)';
+}
+['ta','tb','la','lb'].forEach(id=>$('#'+id).addEventListener('input',drawCos));
+$$('[data-pre]').forEach(b=>b.addEventListener('click',()=>{$('#tb').value=(+$('#ta').value+ +b.dataset.pre)%360;drawCos()}));
+reg(cs,drawCos);
+
+/* dimension checker */
+function dims(){
+  const g=id=>Math.max(1,Math.min(8,Math.round(+$('#'+id).value||1)));
+  const m=g('dm'),n=g('dn'),n2=g('dn2'),p=g('dp'),u=12;
+  const blk=(r,c,cl)=>'<span class="blk '+cl+'" style="width:'+c*u+'px;height:'+r*u+'px"></span>';
+  const ok=n===n2;
+  $('#dBlk').innerHTML=blk(m,n,'a')+'<span>×</span>'+blk(n2,p,'b')+'<span>=</span>'+(ok?blk(m,p,''):'<span class="bad">?</span>');
+  $('#dOut').innerHTML=ok?'<span class="ok">곱할 수 있어요</span> → 결과 '+m+'×'+p+', 내적 '+(m*p)+'번, 내적 하나에 짝 '+n+'쌍':'<span class="bad">곱할 수 없어요</span> → A의 열 수 '+n+' ≠ B의 행 수 '+n2;
+  $('#dRev').textContent='반대 순서 BA ('+n2+'×'+p+')('+m+'×'+n+'): '+(p===m?'가능, 결과 '+n2+'×'+n:'불가능 ('+p+' ≠ '+m+')');
+}
+['dm','dn','dn2','dp'].forEach(id=>$('#'+id).addEventListener('input',dims));dims();
+
+/* cube */
+{
+  const s=50,d=27,ox=70,oy=100;let h='';
+  for(let k=2;k>=0;k--)for(let i=2;i>=0;i--)for(let j=0;j<3;j++){
+    const x=ox+j*s+k*d,y=oy+i*s-k*d,hi=(i===0&&j===0)?' hi':'';
+    h+='<polygon class="cf2'+hi+'" points="'+x+','+y+' '+(x+d)+','+(y-d)+' '+(x+s+d)+','+(y-d)+' '+(x+s)+','+y+'"/>';
+    h+='<polygon class="cf3'+hi+'" points="'+(x+s)+','+y+' '+(x+s+d)+','+(y-d)+' '+(x+s+d)+','+(y+s-d)+' '+(x+s)+','+(y+s)+'"/>';
+    h+='<rect class="cf1'+hi+'" x="'+x+'" y="'+y+'" width="'+s+'" height="'+s+'"/>';
+  }
+  const ar=(x1,y1,x2,y2)=>'<line x1="'+x1+'" y1="'+y1+'" x2="'+x2+'" y2="'+y2+'" style="stroke:var(--ink);stroke-width:1.6" marker-end="url(#mK)"/>';
+  h+=ar(ox-18,oy,ox-18,oy+3*s)+'<text x="'+(ox-26)+'" y="'+(oy+1.5*s)+'" text-anchor="end">A축</text>';
+  h+=ar(ox,oy+3*s+18,ox+3*s,oy+3*s+18)+'<text x="'+(ox+1.5*s)+'" y="'+(oy+3*s+40)+'" text-anchor="middle">B축</text>';
+  h+=ar(ox+3*s+14,oy+3*s,ox+3*s+14+3*d,oy+3*s-3*d)+'<text x="'+(ox+3*s+24+3*d)+'" y="'+(oy+3*s-3*d+18)+'">Z축</text>';
+  $('#cube').innerHTML='<defs><marker id="mK" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="6" markerHeight="6" orient="auto"><path d="M0 0L10 5L0 10z" style="fill:var(--ink)"/></marker></defs>'+h;
+}
+
+/* determinant */
+const dsv=$('#detSvg');
+const DEF=[2,1,1,3];
+function drawDet(){
+  const [a,b,c,d]=['ra','rb','rc','rd'].map(id=>+$('#'+id).value);
+  ['ra','rb','rc','rd'].forEach((id,k)=>$('#'+id+'O').textContent=fmt([a,b,c,d][k]));
+  const det=a*d-b*c;
+  const pts=[[0,0],[a,c],[a+b,c+d],[b,d]];
+  const R=Math.max(3.5,...pts.flat().map(Math.abs))+0.5;
+  const f=frame(dsv,-R,R,-R,R);
+  const P=pts.map(q=>f.X(q[0])+','+f.Y(q[1])).join(' ');
+  dsv.innerHTML='<defs>'+marker('mD1','--row')+marker('mD2','--col')+'</defs>'+f.g+
+    '<rect class="usq" x="'+f.X(0)+'" y="'+f.Y(1)+'" width="'+f.sc+'" height="'+f.sc+'"/>'+
+    '<polygon class="par'+(det<0?' flip':'')+'" points="'+P+'"/>'+
+    '<line class="va" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(a)+'" y2="'+f.Y(c)+'" marker-end="url(#mD1)"/>'+
+    '<line class="vb" x1="'+f.X(0)+'" y1="'+f.Y(0)+'" x2="'+f.X(b)+'" y2="'+f.Y(d)+'" marker-end="url(#mD2)"/>'+
+    '<text x="'+(f.X(a)+8)+'" y="'+(f.Y(c)-8)+'">(a, c)</text><text x="'+(f.X(b)+8)+'" y="'+(f.Y(d)-8)+'">(b, d)</text>';
+  $('#detM').innerHTML='<span>A =</span>'+matHTML([[a,b],[c,d]],{sm:1});
+  $('#detV').textContent='det = '+fmt(a)+'×'+neg(d)+' − '+neg(b)+'×'+neg(c)+' = '+fmt(det);
+  if(Math.abs(det)<1e-9){
+    $('#detT').innerHTML='<span class="bad">넓이 0: 평면이 선(또는 점)으로 납작해졌어요.</span> 되돌릴 방법이 없으니 역행렬이 없어요(특이행렬).';
+    $('#invM').innerHTML='';
+  }else{
+    $('#detT').innerHTML='넓이가 <b>'+fmt(Math.abs(det))+'배</b>'+(det<0?', 방향이 뒤집힘':'')+'. 역행렬 = 1/det × (d −b / −c a):';
+    $('#invM').innerHTML='<span>A⁻¹ =</span>'+matHTML([[d/det,-b/det],[-c/det,a/det]],{sm:1});
+  }
+}
+['ra','rb','rc','rd'].forEach(id=>$('#'+id).addEventListener('input',drawDet));
+const setDet=v=>{['ra','rb','rc','rd'].forEach((id,k)=>$('#'+id).value=v[k]);drawDet()};
+$('#mkSing').addEventListener('click',()=>setDet([1,2,1.5,3]));
+$('#mkBack').addEventListener('click',()=>setDet(DEF));
+reg(dsv,drawDet);
+
+/* lines */
+function lineFig(s,lines,pt,rg){
+  return ()=>{
+    const f=frame(s,rg[0],rg[1],rg[0],rg[1],18);
+    let L='';
+    lines.forEach(q=>{
+      let p1,p2;
+      if(Math.abs(q[1])>1e-9){p1=[rg[0],(q[2]-q[0]*rg[0])/q[1]];p2=[rg[1],(q[2]-q[0]*rg[1])/q[1]]}
+      else{p1=[q[2]/q[0],rg[0]];p2=[q[2]/q[0],rg[1]]}
+      L+='<line class="ln '+q[3]+'" x1="'+f.X(p1[0])+'" y1="'+f.Y(p1[1])+'" x2="'+f.X(p2[0])+'" y2="'+f.Y(p2[1])+'"/>';
+    });
+    const id=s.id+'c';
+    let pp='';
+    if(pt)pp='<circle class="pt" cx="'+f.X(pt[0])+'" cy="'+f.Y(pt[1])+'" r="6"/><text x="'+(f.X(pt[0])+12)+'" y="'+(f.Y(pt[1])-10)+'">('+pt[0]+', '+pt[1]+')</text>';
+    s.innerHTML='<defs><clipPath id="'+id+'"><rect x="'+f.X(rg[0])+'" y="'+f.Y(rg[1])+'" width="'+(f.X(rg[1])-f.X(rg[0]))+'" height="'+(f.Y(rg[0])-f.Y(rg[1]))+'"/></clipPath></defs>'+f.g+'<g clip-path="url(#'+id+')">'+L+'</g>'+pp;
+  };
+}
+reg($('#lineSvg'),lineFig($('#lineSvg'),[[2,1,5,'l1'],[1,3,10,'l2']],[1,3],[-1,6]));
+reg($('#case1'),lineFig($('#case1'),[[2,1,5,'l1'],[1,3,10,'l2']],[1,3],[-1,5]));
+reg($('#case2'),lineFig($('#case2'),[[1,1,2,'l1'],[2,2,4,'l2 dsh']],null,[-1,4]));
+reg($('#case3'),lineFig($('#case3'),[[1,1,2,'l1'],[2,2,5,'l2']],null,[-1,4]));
+
+/* gauss */
+const G=[
+  [[[1,1,1,6],[2,1,-1,1],[1,-1,2,5]],-1,'첨가행렬 [A | b]로 씁니다.'],
+  [[[1,1,1,6],[0,-1,-3,-11],[1,-1,2,5]],1,'R2 ← R2 − 2×R1 : 첫 열의 2를 0으로'],
+  [[[1,1,1,6],[0,-1,-3,-11],[0,-2,1,-1]],2,'R3 ← R3 − R1 : 첫 열의 1을 0으로'],
+  [[[1,1,1,6],[0,-1,-3,-11],[0,0,7,21]],2,'R3 ← R3 − 2×R2 : 상삼각 형태 완성'],
+  [[[1,1,1,6],[0,-1,-3,-11],[0,0,7,21]],2,'후진대입: 7z = 21 → z = 3'],
+  [[[1,1,1,6],[0,-1,-3,-11],[0,0,7,21]],1,'−y − 3×3 = −11 → y = 2'],
+  [[[1,1,1,6],[0,-1,-3,-11],[0,0,7,21]],0,'x + 2 + 3 = 6 → x = 1, 답 (1, 2, 3)']
+];
+let gi=0;
+function gRender(){
+  const [M,h,t]=G[gi];
+  $('#gMat').innerHTML=matHTML(M,{sm:1,aug:1});
+  if(h>=0)$$('#gMat .cell').forEach(c=>{if(+c.dataset.i===h)c.classList.add('hl')});
+  $('#gNote').textContent=t;$('#gStep').textContent=(gi+1)+' / '+G.length;
+  $('#gPrev').disabled=gi===0;$('#gNext').disabled=gi===G.length-1;
+}
+$('#gPrev').addEventListener('click',()=>{if(gi>0){gi--;gRender()}});
+$('#gNext').addEventListener('click',()=>{if(gi<G.length-1){gi++;gRender()}});
+gRender();
+
+/* types */
+const T=[
+  ['벡터 (열·행)','n×1 또는 1×n. 데이터 하나의 기본 단위',4,1,(i,j)=>['v','x'],['특성 벡터: 환자 1명 = (나이, 혈압, BMI…)','가중치 β, 기울기 벡터 (경사하강법)','임베딩 → 유사도 검색, 원-핫 인코딩'],'임베딩 조회 = 원-핫 × 임베딩 행렬. 실제로는 인덱싱으로 처리'],
+  ['정방행렬','행 수 = 열 수. 같은 공간 안에서 변환을 반복',4,4,()=>['v','x'],['공분산·상관행렬 (변수 × 변수)','그래프 인접행렬, 마르코프 전이행렬, PageRank','RNN 은닉 가중치 W_hh'],'입력과 출력 차원이 같아서 거듭 곱할 수 있음'],
+  ['영행렬 O','모든 원소가 0',4,4,()=>['z','0'],['결과 공간 미리 할당 matrix(0, n, m)','기울기 누적 zero_grad, bias 초기화','CNN 패딩, 희소 데이터'],'주의: 가중치를 0으로 초기화하면 모든 뉴런이 똑같아짐'],
+  ['항등행렬 I','대각선 1, 나머지 0. 곱해도 그대로',4,4,(i,j)=>i===j?['o','1']:['z','0'],['릿지 회귀 (XᵀX + λI)⁻¹Xᵀy','ResNet 잔차 연결 x + F(x)','공분산에 εI 더해 수치 안정화, 역행렬 검증'],'"아무것도 안 바꾸는" 기준점이자 안전장치'],
+  ['대각행렬','대각선 밖이 모두 0',4,4,(i,j)=>i===j?['v','d']:['z','0'],['표준화: X · diag(1/σ)','Adam·RMSProp의 가중치별 학습률','그래프 차수행렬 L = D − A, SVD의 Σ, 고유값 D'],'대각 원소만 저장: 메모리·곱셈 O(n)'],
+  ['스칼라행렬 kI','대각 원소가 모두 같은 대각행렬',4,4,(i,j)=>i===j?['q','k']:['z','0'],['학습률 η (모든 가중치에 같은 값)','L2 가중치 감쇠 λ','균일 확대·축소'],'사실상 숫자 하나. Adam은 이걸 대각행렬로 확장한 셈'],
+  ['상삼각 · 하삼각','대각선 아래(또는 위)가 모두 0',4,4,(i,j)=>j>=i?['v','×']:['z','0'],['가우스 소거, LU 분해 (solve 내부)','QR 분해 (lm 내부), 촐레스키 (다변량 정규 샘플링)','GPT 인과 마스크, 누적합'],'아래 식부터 대입만 하면 바로 풀림, det = 대각 원소의 곱'],
+  ['대칭행렬','Aᵀ = A. 같은 색끼리 같은 값',4,4,(i,j)=>{if(i===j)return ['v','•'];const L={1:'a',2:'b',3:'c',6:'d',7:'e',11:'f'}[Math.min(i,j)*4+Math.max(i,j)];return [['o','p','q'][(L.charCodeAt(0)-97)%3],L]},['PCA: 공분산의 고유벡터 = 주성분','거리행렬 (k-means, kNN, 계층 군집)','SVM 커널(그람) 행렬, 헤시안 (뉴턴법)'],'절반만 저장, 고윳값은 실수, 고유벡터끼리 직교'],
+  ['반대칭행렬','Aᵀ = −A, 대각선은 0',3,3,(i,j)=>i===j?['z','0']:j>i?['p','+']:['o','−'],['3D 외적을 행렬곱으로 [a]ₓb','회전 표현 (로봇 관절, 드론 자세)','강체의 각속도'],'데이터 분석보다 그래픽·물리에서 주로 등장'],
+  ['직교행렬 Q','QᵀQ = I. 길이·각도 보존 (회전, 반사)',2,2,(i,j)=>[['v','c'],['v','−s'],['v','s'],['v','c']][i*2+j],['QR 분해, PCA 축, SVD의 U·V','RNN 직교 초기화: 기울기 폭발·소실 완화','JPEG의 DCT, 3D 회전'],'역행렬 = 전치: O(n³) 대신 O(n²), 반올림 오차가 쌓이지 않음'],
+  ['특이행렬','det = 0. 한 행이 다른 행의 배수',3,3,(i,j)=>[['v',String(j+1)],['q',String(2*(j+1))],['v','•']][i],['다중공선성 진단: lm에서 계수가 NA','조건수 kappa(), 유사역행렬 MASS::ginv()','정칙성이 필수: 연립방정식, Normalizing Flow'],'계산 전에 문제를 미리 감지. 대처: 변수 제거, 릿지, PCA']
+];
+$('#typeGrid').innerHTML=T.map(t=>{
+  let cells='';for(let i=0;i<t[2];i++)for(let j=0;j<t[3];j++){const c=t[4](i,j);cells+='<i class="'+c[0]+'">'+(c[1]==='x'?'':c[1])+'</i>'}
+  return '<article class="type"><div class="pat" style="grid-template-columns:repeat('+t[3]+',22px)">'+cells+'</div><h3>'+t[0]+'</h3><p class="def">'+t[1]+'</p><ul>'+t[5].map(x=>'<li>'+x+'</li>').join('')+'</ul><p class="gain"><b>이점</b> '+t[6]+'</p></article>';
+}).join('');
+
+/* mask */
+const wd=['나는','오늘','행렬을','공부','한다'];
+let mk='<div class="hd"></div>'+wd.map(w=>'<div class="hd">'+w+'</div>').join('');
+wd.forEach((w,i)=>{mk+='<div class="hd" style="text-align:right">'+w+'</div>'+wd.map((_,j)=>j<=i?'<div class="on">봄</div>':'<div class="off">−∞</div>').join('')});
+$('#mask').innerHTML=mk;
+
+/* copy buttons */
+$$('.code').forEach(box=>{
+  const b=document.createElement('button');b.className='copy';b.type='button';b.textContent='복사';
+  b.addEventListener('click',async()=>{try{await navigator.clipboard.writeText(box.querySelector('code').textContent);b.textContent='복사됨'}catch(e){b.textContent='복사 실패'}setTimeout(()=>b.textContent='복사',1500)});
+  box.appendChild(b);
+});
+}
+</script>
+</body>
+</html>
