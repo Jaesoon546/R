@@ -89,6 +89,7 @@ svg text{font:14px Literata,"Noto Serif KR",serif;fill:var(--ink);paint-order:st
 .par{fill:color-mix(in srgb,var(--row) 20%,transparent);stroke:var(--row);stroke-width:2}
 .par.flip{fill:color-mix(in srgb,var(--col) 20%,transparent);stroke:var(--col)}
 .uc{fill:none;stroke:var(--mute);stroke-width:1.3}.ucirc{fill:none;stroke:var(--rule);stroke-width:1.3;stroke-dasharray:3 4}.eline{stroke:var(--ink);stroke-width:1.4;stroke-dasharray:7 5;opacity:.55}
+.stackbar{display:flex;height:44px;border-radius:6px;overflow:hidden;margin:10px 0 6px}.stackbar div{display:grid;place-items:center;color:#fff;font-size:15px;white-space:nowrap;padding:0 8px}
 .usq{fill:none;stroke:var(--mute);stroke-dasharray:4 4}
 .cf1{fill:var(--panel);stroke:var(--ink);stroke-width:1}.cf2{fill:var(--f2);stroke:var(--ink);stroke-width:1}.cf3{fill:var(--f3);stroke:var(--ink);stroke-width:1}
 .hi{fill:var(--rowbg);stroke:var(--row);stroke-width:1.6}
@@ -145,7 +146,7 @@ ol.quiz>li{margin:0 0 12px}
 <header class="band" style="border-top:0">
 <div class="wrap">
 <h1>행렬 연산 학습노트</h1>
-<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 고유벡터, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
+<p class="lede">내적에서 출발해 행렬곱, 연립방정식, 고유벡터, PCA·SVD, 행렬의 종류와 그 쓰임새까지. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
 <div class="hero">
   <div class="falk" aria-label="행렬곱 팔크 배치도">
     <div class="lab">B (2×5)<br>뒤 행렬</div>
@@ -167,7 +168,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#three">3차원</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -564,6 +565,112 @@ s &lt;- Re(eigen(t(Pm))$vectors[, 1]); s / sum(s)   # 0.519 0.278 0.204</code></
 </div>
 </div></section>
 
+<section class="band" id="pca"><div class="wrap">
+<h2>고윳값이 분산이 되려면 평균을 빼야 해요: 수업 예제로 보는 PCA와 SVD</h2>
+<p>무엇을 분해했느냐가 고윳값의 의미를 정해요. 평균을 빼지 않은 AᵀA나 AAᵀ의 고윳값은 <b>원점 기준 제곱합</b>, 평균을 뺀 공분산행렬의 고윳값이 <b>분산</b>이에요.</p>
+
+<div class="two">
+<div>
+<h3 style="margin-top:0">수업 예제: mdat %*% t(mdat)</h3>
+<div class="eq"><span>mdat =</span><span data-m="20,18,16;14,12,10;8,6,4">mdat</span><span>AAᵀ =</span><span data-m="980,656,332;656,440,224;332,224,116">mdat2</span></div>
+<div class="tbl"><table>
+<thead><tr><th></th><th>고윳값</th><th>고유벡터 (열)</th></tr></thead>
+<tbody>
+<tr><td>1번</td><td class="n">1532.618</td><td>(−0.799, −0.536, −0.272)</td></tr>
+<tr><td>2번</td><td class="n">3.382</td><td>(−0.441, 0.215, 0.871)</td></tr>
+<tr><td>3번</td><td class="n">≈ 0</td><td>(0.408, −0.816, 0.408) ∝ (1, −2, 1)</td></tr>
+</tbody></table></div>
+<p class="note">R에서는 고유벡터 부호가 반대로 나올 수 있어요. 방향이 같으면 같은 고유벡터예요.</p>
+<p><b>세 번째 고윳값이 0인 이유:</b> a − b = b − c = (6, 6, 6)이라 <b>a − 2b + c = 0</b>. 한 행이 나머지로 만들어져서 rank = 2이고, 3번 고유벡터 (1, −2, 1)이 그 관계를 그대로 알려줘요. 회귀라면 다중공선성, 행렬로는 det = 0(특이행렬)이에요.</p>
+</div>
+<div>
+<h3 style="margin-top:0">고윳값 합 1536은 어디서 왔을까</h3>
+<p>고윳값의 합 = trace = 모든 원소의 제곱합 = 400 + 324 + … + 16 = <b>1536</b>. 이걸 둘로 나누면 이렇게 돼요.</p>
+<div class="stackbar" role="img" aria-label="1536 중 평균 부분 1320, 퍼진 부분 216"><div style="width:85.9%;background:var(--row)">평균 때문 1320 (86%)</div><div style="width:14.1%;background:var(--col)">216</div></div>
+<p class="note">평균 부분 = n × |열 평균|² = 3 × (14² + 12² + 10²) = 1320 · 퍼진 부분 = (n − 1) × 분산 합 = 2 × 108 = 216</p>
+<p>1532.6이라는 큰 고윳값의 대부분은 "값들이 0보다 크다"는 정보예요. 그래서 첫 고유벡터도 퍼짐이 아니라 <b>평균이 놓인 방향</b>을 주로 가리켜요.</p>
+<p><b>cov(mdat)</b>는 모든 칸이 36이에요. y = x − 2, z = x − 4라서 평균을 빼면 세 열이 똑같아지거든요. 고윳값은 <b>108, 0, 0</b>이고 PC1 하나가 100%를 설명해요.</p>
+</div>
+</div>
+
+<h3>무엇을 분해했느냐에 따른 의미</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>분해한 것</th><th>고윳값(σ²)의 의미</th><th>수업 예제</th><th>R</th></tr></thead>
+<tbody>
+<tr><td>AᵀA 또는 AAᵀ (평균 안 뺌)</td><td>원점 기준 제곱합 (평균 + 퍼짐)</td><td>1532.6, 3.38, 0</td><td><code>eigen(t(A) %*% A)</code></td></tr>
+<tr><td>SVD(A)</td><td>σ² = 위와 같은 제곱합</td><td>1532.6, 3.38, 0</td><td><code>svd(A)$d^2</code></td></tr>
+<tr><td>XcᵀXc (평균 뺌)</td><td>(n − 1) × 분산. 비율은 분산과 같음</td><td>216, 0, 0</td><td><code>eigen(t(Xc) %*% Xc)</code></td></tr>
+<tr><td>cov(X)</td><td><b>분산</b> = PCA 고윳값</td><td>108, 0, 0</td><td><code>eigen(cov(X))</code></td></tr>
+<tr><td>SVD(Xc) ÷ (n − 1)</td><td><b>분산</b> (prcomp가 쓰는 방식)</td><td>108, 0, 0</td><td><code>svd(Xc)$d^2 / (n-1)</code></td></tr>
+<tr><td>cor(X)</td><td>표준화된 분산 (단위 영향 제거)</td><td></td><td><code>prcomp(X, scale. = TRUE)</code></td></tr>
+</tbody></table></div>
+
+<div class="two">
+<div>
+<h3 style="margin-top:0">AAᵀ와 AᵀA는 어떤 A든 항상 정방 + 대칭</h3>
+<p><b>원소로:</b> AAᵀ의 (i, j) = i행 · j행 = j행 · i행 = (j, i). 예: (1, 2) = 20×14 + 18×12 + 16×10 = 656 = (2, 1).<br><b>식으로:</b> (AAᵀ)ᵀ = (Aᵀ)ᵀAᵀ = AAᵀ.</p>
+<div class="tbl"><table>
+<thead><tr><th></th><th>AAᵀ</th><th>AᵀA</th></tr></thead>
+<tbody>
+<tr><td>크기</td><td>행 수 × 행 수</td><td>열 수 × 열 수</td></tr>
+<tr><td>(i, j)</td><td>i행 · j행: 관측치끼리 유사도</td><td>i열 · j열: 변수끼리 관계</td></tr>
+<tr><td>공통</td><td colspan="2">대칭, 고윳값 ≥ 0 (양의 준정치), 0이 아닌 고윳값은 서로 같음</td></tr>
+</tbody></table></div>
+<p class="note">공분산 XcᵀXc / (n − 1)도 같은 모양이라서 항상 대칭이고, 고윳값이 0 이상이고, 고유벡터끼리 직교해요. PCA가 늘 잘 되는 이유예요.</p>
+</div>
+<div>
+<h3 style="margin-top:0">SVD와 PCA</h3>
+<p>A = UΣVᵀ. SVD는 넣어준 행렬을 그대로 분해하므로 σ²은 항상 <b>제곱합</b>이에요. <b>평균을 뺀 Xc</b>를 넣으면 그 제곱합이 (n − 1) × 분산이 되고, 그게 PCA예요. <code>prcomp()</code>는 XᵀX를 만들면서 생기는 반올림 오차를 피하려고 eigen 대신 SVD를 써요.</p>
+<div class="tbl"><table>
+<thead><tr><th>SVD</th><th>PCA 의미</th><th>prcomp</th></tr></thead>
+<tbody>
+<tr><td>V의 열</td><td>주성분 방향</td><td><code>$rotation</code></td></tr>
+<tr><td>σ² / (n − 1)</td><td>주성분 분산</td><td><code>$sdev^2</code></td></tr>
+<tr><td>UΣ = XcV</td><td>주성분 점수</td><td><code>$x</code></td></tr>
+</tbody></table></div>
+<p><b>평균을 빼지 않는 SVD</b>는 0이 "없음"인 데이터에서 일부러 써요: 문서×단어 빈도(LSA), 픽셀 밝기(이미지 압축), 사용자×상품 평점(추천). 이때 σ²은 분산이 아니라 그 방향의 <b>에너지</b>이고, 평균을 빼지 않아야 희소성(대부분 0)도 유지돼요.</p>
+</div>
+</div>
+
+<h3>컴퓨터 계산 결과 읽기: 1.665335e-16은 0이에요</h3>
+<div class="two">
+<div>
+<p>e-16은 × 10⁻¹⁶. 실수는 64비트 double로 저장돼 0.1조차 정확히 표현하지 못해서, 수학적으로 0인 값이 10⁻¹⁶ 수준으로 남아요. R의 정밀도 한계 <code>.Machine$double.eps</code> = 2.22e-16 근처면 <b>0으로 읽으세요</b>. 고윳값 1.8e-13도 같은 이유로 0이에요(음수가 아님).</p>
+<p><b>고유벡터는 열이에요.</b> <code>$vectors[, 1]</code>이 첫 번째 고유벡터예요. 대칭행렬에서는 V가 직교행렬이라 행끼리도 직교하지만(VᵀV = I이면 VVᵀ = I), 일반 행렬에서는 아니므로 <b>열로 확인</b>하는 습관을 들이세요.</p>
+<p><b>실수 비교는 == 대신 all.equal()</b>. <code>crossprod(V) == diag(3)</code>은 오차 때문에 FALSE가 나와요.</p>
+</div>
+<div class="code"><pre><code>V &lt;- mdatEigen$vectors
+V[, 1] %*% V[, 2]             # 열끼리 내적 → 약 0
+crossprod(V)                  # 모든 열 쌍을 한 번에 (대각 1, 나머지 0)
+zapsmall(crossprod(V))        # 아주 작은 값을 0으로 정리
+all.equal(crossprod(V), diag(ncol(V)))   # TRUE → 직교행렬
+
+# 고윳값 읽기
+ev &lt;- mdatEigen$values
+ev / sum(ev); cumsum(ev) / sum(ev)       # 설명 비율, 누적 비율
+qr(mdat)$rank; det(mdat)                 # 2, 약 0
+
+# 분산으로 PCA 하기
+Xc &lt;- scale(mdat, center = TRUE, scale = FALSE)
+eigen(cov(mdat))$values                  # 108 0 0
+svd(Xc)$d^2 / (nrow(mdat) - 1)           # 108 0 0
+prcomp(mdat)$sdev^2                      # 108 0 0
+scores &lt;- Xc %*% eigen(cov(mdat))$vectors   # 주성분 점수</code></pre></div>
+</div>
+
+<h3>수업 코드 주석 보완</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>원래 주석</th><th>보완</th></tr></thead>
+<tbody>
+<tr><td>a(4x3) x at(3x4) = (4x4)</td><td>일반 규칙 (m×n)(n×m) = (m×m). 수업 예제는 3×3 × 3×3 = 3×3. AAᵀ는 항상 정방 + 대칭</td></tr>
+<tr><td>대각선의 의미는 size를 조절</td><td>대각행렬 곱 = 배율 조정. <code>diag(d) %*% A</code>는 행마다, <code>A %*% diag(d)</code>는 열마다</td></tr>
+<tr><td>뒤의 열수만큼 특징 추출</td><td>AAᵀ는 행(관측치)끼리, 열 개수만큼 짝지어 곱해 더한 내적</td></tr>
+<tr><td>mode(eigen(...))</td><td>"list": $values와 $vectors 두 요소</td></tr>
+<tr><td>$vectors 고유벡터(정직교)</td><td>맞아요. 대칭행렬이라 열끼리 직교, 길이 1</td></tr>
+<tr><td>$values 분산의 크기</td><td>공분산행렬을 분해했을 때만 분산. AAᵀ를 바로 분해하면 원점 기준 제곱합</td></tr>
+</tbody></table></div>
+</div></section>
+
 <section class="band" id="types"><div class="wrap">
 <h2>행렬의 종류: 모양을 알면 더 빠른 함수, 더 적은 메모리, 미리 보이는 문제</h2>
 <p>각 그림은 4×4 기준의 생김새예요. 검은 칸 = 임의의 값, 빈 칸 = 0, 빨강 = 1 또는 특별한 값.</p>
@@ -641,6 +748,8 @@ qr(A); chol(S)        # QR, 촐레스키
 cov(X); cor(X)        # 공분산, 상관 (대칭)
 prcomp(X, scale. = TRUE)     # PCA
 dist(X); hclust(dist(X))     # 거리행렬, 군집
+scale(X, scale = FALSE)      # 평균 빼기 (센터링)
+zapsmall(M); all.equal(A, B) # 1e-16 정리, 오차 허용 비교
 array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 </div>
 </div></section>
@@ -659,6 +768,8 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <li>a = (1, 2), b = (−2, 1)의 내적과 두 벡터의 관계는?</li>
 <li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
 <li>(4 1 / 2 3)의 고윳값과 고유벡터를 구하세요.</li>
+<li>2×3 행렬 A에 대해 AAᵀ와 AᵀA의 크기는? 둘 다 대칭인가요?</li>
+<li>평균을 빼지 않은 데이터로 eigen(t(X) %*% X)를 하면 고윳값을 분산이라고 부를 수 있나요?</li>
 </ol>
 </div>
 <div>
@@ -666,6 +777,7 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <details><summary>3 · 4번 정답</summary><p>3. det C = 6 − 0 = 6, C⁻¹ = ⅙(3 0 / −1 2)<br>4. x = 2, y = 3 (det = −1 − 6 = −7, 크래머: x = (−8 − 6)/−7 = 2)</p></details>
 <details><summary>5 · 6 · 7번 정답</summary><p>5. (3×2). 반대는 (4×2)(3×4)에서 2 ≠ 3이라 불가능<br>6. 1×(−2) + 2×1 = 0 → 직교<br>7. 3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
 <details><summary>8번 정답</summary><p>λ² − 7λ + 10 = 0 → λ = 5, 2<br>λ = 5: (−1 1 / 2 −2)v = 0 → v = (1, 1)<br>λ = 2: (2 1 / 2 1)v = 0 → v = (1, −2)<br>확인: A(1, −2) = (2, −4) = 2(1, −2)</p></details>
+<details><summary>9 · 10번 정답</summary><p>9. AAᵀ는 2×2, AᵀA는 3×3. 둘 다 항상 대칭이고, 0이 아닌 고윳값은 같아요.<br>10. 아니요. 원점 기준 제곱합이라 평균의 크기가 섞여 있어요. 평균을 빼고 n − 1로 나눈 cov(X)를 분해하거나, svd(Xc)$d^2 / (n − 1)을 쓰면 분산이에요.</p></details>
 <div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
 D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
 C * D; C %*% D; det(C); solve(C)
