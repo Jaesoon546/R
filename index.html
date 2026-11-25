@@ -145,6 +145,8 @@ input[type=number]{font:16px Literata,serif;width:4.2em;min-height:44px;padding:
 details{border:1px solid var(--rule);border-radius:8px;padding:10px 14px;margin:8px 0}
 summary{cursor:pointer;font-weight:600;min-height:28px}
 ol.quiz>li{margin:0 0 12px}
+.strip{width:100%;height:auto;display:block;margin:0 0 6px}
+.bars>span:first-child,.bars>span{white-space:nowrap}
 .cube{max-width:390px;width:100%;height:auto;display:block}
 @media(max-width:600px){table{font-size:13.5px}th,td{padding:7px 5px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px;border-bottom:1px solid var(--rule)}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:6.5em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:6em;margin-inline-start:-6.5em;color:var(--mute);font-size:12.5px;white-space:normal}.stack td:empty{display:none}.falk .lab{font-size:13px}}
 @media(prefers-reduced-motion:reduce){.mat .cell{transition:none}}
@@ -156,7 +158,7 @@ ol.quiz>li{margin:0 0 12px}
 <header class="band" style="border-top:0">
 <div class="wrap">
 <h1>행렬 연산 학습노트</h1>
-<p class="lede">요소 연산과 내적에서 출발해 행렬곱, 벡터의 크기·방향 변화, 행렬식, 연립방정식, 고유벡터, PCA·SVD, 3차원 확장, 행렬의 종류까지 목차 순서대로 읽도록 짰어요. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
+<p class="lede">요소 연산과 내적에서 출발해 행렬곱, 벡터의 크기·방향 변화, 행렬식, 연립방정식, 고유벡터, PCA·SVD, 3차원 확장, 행렬의 종류, 그리고 데이터를 다루는 기술통계와 전처리까지 목차 순서대로 읽도록 짰어요. 이 노트 전체에서 <span class="rt">빨강은 행(앞 행렬)</span>, <span class="ct">파랑은 열(뒤 행렬)</span>을 뜻해요.</p>
 <div class="hero">
   <div class="falk" aria-label="행렬곱 팔크 배치도">
     <div class="lab">B (2×5)<br>뒤 행렬</div>
@@ -178,7 +180,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#three">3차원 확장</a><a href="#types">행렬의 종류</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#three">3차원 확장</a><a href="#types">행렬의 종류</a><a href="#stats">기술통계</a><a href="#prep">전처리</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -784,6 +786,242 @@ solve(t(X) %*% X + 0.1 * diag(ncol(X)), t(X) %*% y)</code></pre></div>
 <p class="note">오늘 범위에서는 대각·삼각·대칭·직교 네 가지가 가장 자주 나와요. 의료 데이터에서는 키, 몸무게, BMI를 함께 넣으면 다중공선성(특이행렬)이 생기기 쉬워요.</p>
 </div></section>
 
+<section class="band" id="stats"><div class="wrap">
+<h2>기술통계는 데이터를 중심, 퍼짐, 모양 세 가지로 요약해요</h2>
+<p>여기서부터는 11/25 수업(<code>R_begin/R_programing_3.R</code>) 내용이에요. 데이터 프레임은 <span class="rt">행 = 관측값(data point)</span>, <span class="ct">열 = 변수(feature)</span>인 표예요. 아래 통계량은 모두 <b>열 하나(벡터)</b>를 숫자 하나로 줄이는 계산이에요.</p>
+<p class="note">읽는 순서: 그림으로 평균과 중앙값이 어떻게 다른지 먼저 보고, 표에서 통계량별 공식과 R 함수를 확인한 다음, 범주화와 그룹별 요약으로 넘어가요. 예시는 모두 <code>mtcars$mpg</code>(차 32대의 연비)예요.</p>
+
+<div class="two">
+<div>
+<svg class="strip" id="sSvg" viewBox="0 0 640 260" role="img" aria-label="mtcars mpg 32개 값의 점그림과 상자그림"></svg>
+<div class="tog">
+<label><input type="checkbox" id="sBand" checked>평균 ± 1 sd</label>
+<label><input type="checkbox" id="sBox" checked>상자그림</label>
+<label><input type="checkbox" id="sFence">IQR 울타리 (1.5 × IQR)</label>
+<label><input type="checkbox" id="sSig">3σ 울타리</label>
+</div>
+<div class="ctrl"><label for="sMax">가장 큰 값</label><input type="range" id="sMax" min="33.9" max="80" step="0.1" value="33.9"><output id="sMaxO">33.9</output></div>
+<div class="legend"><span><i style="background:var(--col)"></i>평균</span><span><i style="background:var(--ink)"></i>중앙값</span><span><i style="background:var(--row)"></i>이상치 · 울타리</span></div>
+</div>
+<div>
+<div class="tbl"><table>
+<thead><tr><th>통계량</th><th class="n">지금 값</th><th>R</th></tr></thead>
+<tbody id="sTb"></tbody></table></div>
+<p id="sMsg"></p>
+<p class="note">가장 큰 값 33.9를 오른쪽으로 끌어 보세요. 평균, 표준편차, 왜도는 값 하나에 끌려가지만 중앙값과 IQR은 거의 그대로예요. 그래서 치우친 데이터나 이상치가 있으면 중앙값·IQR을 쓰고, 결측치를 채울 때도 중앙값을 자주 써요.</p>
+</div>
+</div>
+
+<h3>통계량 한눈에 보기</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>묶음</th><th>통계량</th><th>공식 · 뜻</th><th>R</th><th>mpg 결과</th></tr></thead>
+<tbody>
+<tr><td>중심</td><td>평균</td><td>Σx / n. 모든 값이 영향을 줘요</td><td><code>mean(x)</code></td><td>20.09</td></tr>
+<tr><td>중심</td><td>중앙값</td><td>정렬했을 때 가운데 값. 이상치에 강해요</td><td><code>median(x)</code></td><td>19.2</td></tr>
+<tr><td>퍼짐</td><td>분산</td><td>Σ(x − x̄)² / (n − 1). 표본이라 n − 1로 나눠요</td><td><code>var(x)</code></td><td>36.32</td></tr>
+<tr><td>퍼짐</td><td>표준편차</td><td>√분산. 원래 단위로 돌아와요</td><td><code>sd(x)</code></td><td>6.027</td></tr>
+<tr><td>퍼짐</td><td>범위</td><td>최솟값, 최댓값</td><td><code>range(x)</code></td><td>10.4, 33.9</td></tr>
+<tr><td>퍼짐</td><td>사분위수 · IQR</td><td>Q1(25%), Q3(75%), IQR = Q3 − Q1</td><td><code>quantile(x)</code>, <code>IQR(x)</code></td><td>15.425, 22.8 → 7.375</td></tr>
+<tr><td>상대</td><td>표준오차</td><td>sd / √n. 평균 추정이 얼마나 흔들리는지. n이 클수록 0에 가까워요</td><td><code>sd(x)/sqrt(length(x))</code></td><td>1.065</td></tr>
+<tr><td>상대</td><td>변동계수</td><td>sd / 평균. 단위가 다른 변수끼리 퍼짐을 비교해요</td><td><code>sd(x)/mean(x)</code></td><td>0.300</td></tr>
+<tr><td>모양</td><td>왜도</td><td>좌우 균형. 0이면 대칭, +면 오른쪽 꼬리가 길어요</td><td><code>skewness(x)</code></td><td>+0.64</td></tr>
+<tr><td>모양</td><td>첨도</td><td>뾰족함과 꼬리 두께. 정규분포는 3(초과첨도로는 0)</td><td><code>kurtosis(x)</code></td><td>2.80</td></tr>
+</tbody></table></div>
+
+<div class="two">
+<div>
+<h3 style="margin-top:0">왜도·첨도는 패키지마다 숫자가 달라요</h3>
+<div class="tbl"><table>
+<thead><tr><th>mpg</th><th class="n">moments</th><th class="n">e1071 (기본 type 3)</th></tr></thead>
+<tbody>
+<tr><td>skewness</td><td class="n">0.640</td><td class="n">0.611</td></tr>
+<tr><td>kurtosis</td><td class="n">2.799</td><td class="n">−0.373</td></tr>
+</tbody></table></div>
+<p>e1071의 kurtosis는 <b>초과첨도</b>(정규분포 = 0)라서 3을 뺀 값이고, 표본 크기 보정 방식도 달라요. 두 패키지를 같이 불러오면 나중에 부른 쪽 함수가 덮어써요. 어느 쪽인지 분명히 하려면 <code>moments::kurtosis(x)</code>처럼 <code>::</code>로 써요.</p>
+<h3>그래프로 보기</h3>
+<p><code>hist(freq = FALSE)</code>는 막대 높이를 개수가 아닌 <b>밀도</b>로 바꿔요. 그래야 <code>lines(density(x))</code>의 곡선과 같은 축에 겹쳐 그릴 수 있어요. <code>boxplot(y ~ 그룹)</code>처럼 수식을 쓰면 factor 수준별 상자가 나란히 그려져요.</p>
+</div>
+<div>
+<div class="code"><pre><code>x &lt;- mtcars$mpg
+summary(x)                     # 최소, Q1, 중앙값, 평균, Q3, 최대
+quantile(x, c(.1, .25, .5, .75, .9))
+sd(x) / sqrt(length(x))        # 표준오차
+sd(x) / mean(x)                # 변동계수
+moments::skewness(x)           # 0.640
+moments::kurtosis(x)           # 2.799 (정규 = 3)
+
+hist(x, breaks = 10, freq = FALSE, col = "lightblue")
+lines(density(x), col = "red", lwd = 2)
+boxplot(Petal.Length ~ Species, data = iris)   # 품종별 상자</code></pre></div>
+</div>
+</div>
+
+<h3>범주화: 숫자를 factor로, 연속값을 구간으로</h3>
+<div class="two">
+<div>
+<p><code>cyl</code>(4·6·8기통)이나 <code>am</code>(0·1)은 숫자로 저장돼 있어도 크기를 비교하는 값이 아니에요. <code>factor()</code>로 바꾸면 <code>summary()</code>가 평균 대신 <b>개수</b>를 세고, <code>boxplot</code>, <code>lm</code>, <code>ggplot</code>이 범주로 다뤄요.</p>
+<p>연비 같은 연속값은 구간을 나눠 범주로 만들어요. 수업처럼 <code>within()</code> 안에서 조건마다 대입해도 되고, <code>cut()</code>을 쓰면 한 줄이에요. 구간 경계는 <code>right = FALSE</code>면 [20, 25)처럼 왼쪽을 포함해요.</p>
+<p>구간을 만든 뒤에는 <code>table()</code>로 도수분포표를, <code>tapply(값, 그룹, 함수)</code>로 구간별 합·평균·표준편차를 구해요.</p>
+</div>
+<div class="code"><pre><code>mtcars$cyl &lt;- factor(mtcars$cyl)
+summary(mtcars$cyl)            # 4: 11, 6: 7, 8: 14
+
+library(MASS)                  # Cars93
+grp &lt;- cut(Cars93$MPG.highway,
+           breaks = c(20, 25, 30, 35, 40, 51),
+           labels = c("20~25", "25~30", "30~35", "35~40", "40~50"),
+           right = FALSE)
+table(grp)                     # 도수분포표
+tapply(Cars93$MPG.highway, grp, mean)
+
+ggplot(data.frame(grp), aes(grp, fill = grp)) + geom_bar()</code></pre></div>
+</div>
+
+<h3>그룹별 요약: aggregate와 tapply, 그리고 판매 큐브</h3>
+<div class="two">
+<div>
+<p><code>aggregate(값 ~ 그룹, data, 함수)</code>는 결과를 <b>데이터 프레임</b>으로, <code>tapply(값, 그룹들, 함수)</code>는 <b>배열</b>로 돌려줘요. 그룹 열을 여러 개 주면 그 수만큼 차원이 늘어요.</p>
+<p>수업의 <code>revenue_cube</code>는 제품 3 × 월 12 × 연도 2 × 지역 5인 <b>4차원 배열</b>이에요. 행렬 파트의 <a href="#three">3차원 확장</a>과 같은 구조예요. <code>revenue_cube[, , "2012", "SE"]</code>처럼 두 축을 고정하면 제품 × 월 행렬이 남아요. 축 하나만 남으면 R은 자동으로 벡터로 줄여요(<code>drop = FALSE</code>로 막을 수 있어요).</p>
+<p class="note">판매가 없는 조합은 <code>tapply</code> 결과가 0이 아닌 <b>NA</b>예요. 합계를 낼 때는 <code>sum(..., na.rm = TRUE)</code>를 쓰거나 <code>cube[is.na(cube)] &lt;- 0</code>으로 먼저 채워요.</p>
+</div>
+<div class="code"><pre><code>aggregate(cbind(unit, amount) ~ loc, data = sales_fact, sum)
+aggregate(amount ~ year, data = sales_fact, mean)
+
+m &lt;- aggregate(unit ~ month, data = sales_fact, mean)
+m[which.max(m$unit), ]         # 평균 판매수량이 가장 높은 달
+
+cube &lt;- tapply(sales_fact$amount,
+               sales_fact[, c("prod", "month", "year", "loc")], sum)
+dim(cube)                      # 3 12 2 5
+cube[, , "2012", "SE"]         # 2012년 서울: 제품 × 월
+apply(cube, c(1, 3), sum, na.rm = TRUE)   # 제품 × 연도 합계</code></pre></div>
+</div>
+</div></section>
+
+<section class="band" id="prep"><div class="wrap">
+<h2>전처리는 결측치, 이상치, 범주화, 스케일링 순서로 데이터를 다듬어요</h2>
+<p>모델은 숫자 행렬만 받아요. 전처리는 원본 표를 <b>빈칸 없고, 튀는 값이 정리되고, 범주가 0/1 열로 펼쳐지고, 열끼리 크기가 맞춰진 행렬</b>로 만드는 과정이에요.</p>
+<div class="pipe"><span>원본 백업</span><b>→</b><span>결측치 확인·처리</span><b>→</b><span>이상치 탐지·처리</span><b>→</b><span>범주화 · 원-핫</span><b>→</b><span>스케일링</span><b>→</b><span>모델 (lm 등)</span></div>
+<p class="note">시작 전에 <code>original &lt;- data</code>로 백업해 두세요. R은 수정하는 순간 복사본을 만들기 때문에(copy-on-modify) 백업 원본은 그대로 남아요.</p>
+
+<h3>① 결측치(NA): 개수부터 세고, 지울지 채울지 정해요</h3>
+<div class="two">
+<div>
+<p class="note" style="margin-bottom:4px">airquality 열별 NA 개수 (153행)</p>
+<div class="bars" id="naBars"></div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>방법</th><th>R</th><th>언제</th></tr></thead>
+<tbody>
+<tr><td>행 삭제</td><td><code>na.omit(df)</code>, <code>df[complete.cases(df), ]</code></td><td>NA가 적을 때. airquality는 153 → 111행</td></tr>
+<tr><td>중앙값·평균 대체</td><td><code>x[is.na(x)] &lt;- median(x, na.rm = TRUE)</code></td><td>치우친 분포면 중앙값</td></tr>
+<tr><td>패키지로 대체</td><td><code>Hmisc::impute(x, median)</code></td><td>대체한 자리를 표시해 둬요</td></tr>
+<tr><td>모델에 맡기기</td><td><code>lm(..., na.action = na.omit)</code></td><td>쓰인 행 수는 <code>nobs(fit)</code>로 확인</td></tr>
+</tbody></table></div>
+</div>
+<div class="code"><pre><code>sum(is.na(airquality))          # 44
+colSums(is.na(airquality))      # 열별 개수 (Ozone 37, Solar.R 7)
+colMeans(is.na(airquality))     # 열별 비율
+
+aq &lt;- airquality
+aq$Ozone[is.na(aq$Ozone)] &lt;- median(aq$Ozone, na.rm = TRUE)
+
+# 결측이 섞인 채로 회귀: NA가 있는 행은 빠져요
+fit &lt;- lm(medv ~ ptratio + rad, data = BostonHousing,
+          na.action = na.omit)
+nobs(fit)                       # 506보다 적음
+coef(fit)                       # 57.05, -1.769, -0.203
+predict(fit, data.frame(ptratio = 17.8, rad = 2))   # 약 25.15</code></pre></div>
+</div>
+<p class="note"><code>lm</code>은 최소제곱법으로 Σ(예측값 − 실제값)²이 가장 작은 계수를 찾아요. 행렬로는 Xᵀ X β = Xᵀ y를 푸는 것이고, R 내부에서는 <a href="#types">QR 분해</a>로 풀어요. 위의 <a href="#systems">연립방정식</a>과 같은 문제예요.</p>
+
+<h3>② 이상치: 기준에 따라 결과가 달라져요</h3>
+<div class="two">
+<div>
+<div class="tbl"><table>
+<thead><tr><th>기준</th><th>mpg 상한</th><th>33.9는?</th></tr></thead>
+<tbody>
+<tr><td><code>quantile</code> + <code>IQR()</code>: Q3 + 1.5·IQR</td><td class="n">33.86</td><td><span class="bad">이상치</span></td></tr>
+<tr><td><code>boxplot.stats</code>, <code>fivenum</code> 힌지 기준</td><td class="n">33.98</td><td><span class="ok">정상</span></td></tr>
+<tr><td>3σ: 평균 ± 3 × sd</td><td class="n">38.17</td><td><span class="ok">정상</span></td></tr>
+</tbody></table></div>
+<p><code>boxplot()</code>은 사분위수 대신 <code>fivenum()</code>의 <b>힌지</b>(아래·위 절반의 중앙값)를 써요. mpg에서 Q1은 15.425, 아래 힌지는 15.35라서 울타리가 조금 달라지고, 그 사이에 걸린 33.9는 기준에 따라 판정이 갈려요. 보고서에는 <b>어떤 기준을 썼는지</b> 적어 두세요.</p>
+<p>3σ는 정규분포를 가정하고, 평균과 sd 자체가 이상치에 끌려가서 표본이 작으면 잘 안 잡혀요. 치우친 데이터에는 IQR 기준이 더 안전해요.</p>
+</div>
+<div class="code"><pre><code>x &lt;- mtcars$mpg
+Q1 &lt;- quantile(x, .25); Q3 &lt;- quantile(x, .75)
+up &lt;- Q3 + 1.5 * IQR(x)          # 33.8625
+x[x &gt; up | x &lt; Q1 - 1.5 * IQR(x)] # 33.9
+boxplot.stats(x)$out             # numeric(0)  ← 힌지 기준
+x[abs(x - mean(x)) &gt; 3 * sd(x)]  # numeric(0)
+
+# 처리: 지우기 / NA로 바꾼 뒤 대체 / 경계값으로 자르기
+iris$Sepal.Width[iris$Sepal.Width %in%
+                 boxplot.stats(iris$Sepal.Width)$out] &lt;- NA  # 4개
+x_cap &lt;- pmin(pmax(x, Q1 - 1.5 * IQR(x)), up)   # 캡핑(winsorizing)</code></pre></div>
+</div>
+
+<h3>③ 범주화 · 원-핫 인코딩: 범주를 0/1 열로 펼쳐요</h3>
+<div class="two">
+<div>
+<p>"상·중·하"를 1·2·3으로 두면 모델이 "하는 상의 3배"처럼 크기 관계가 있다고 읽어요. 원-핫 인코딩은 범주마다 열을 하나씩 만들고 해당하는 칸만 1로 둬요. 결과는 <b>행마다 1이 딱 하나인 0/1 행렬</b>이에요.</p>
+<div class="tbl"><table>
+<thead><tr><th>cust_id</th><th class="n">age</th><th class="n">age_20</th><th class="n">age_30</th><th class="n">age_40</th><th class="n">age_50</th></tr></thead>
+<tbody id="ohTb"></tbody></table></div>
+<p class="note"><b>더미 변수 함정:</b> 네 열을 모두 더하면 항상 1이라 절편 열과 같아요. 절편이 있는 <code>lm</code>에 네 열을 다 넣으면 열끼리 선형종속이 되고 XᵀX가 <a href="#det">특이행렬(det = 0)</a>이 돼서 계수 하나가 NA로 나와요. 그래서 회귀에는 범주 수 − 1개 열만 넣어요(<code>model.matrix(~ grp)</code>가 자동으로 하나 빼요).</p>
+</div>
+<div class="code"><pre><code>age &lt;- c(25, 45, 31, 30, 49, 53, 27)
+grp &lt;- cut(age, breaks = c(20, 30, 40, 50, 60),
+           labels = c("20", "30", "40", "50"), right = FALSE)
+model.matrix(~ grp - 1)    # 범주 4개 → 열 4개 (딥러닝 입력용)
+model.matrix(~ grp)        # 절편 + 열 3개 (회귀용, 20대가 기준)
+
+# 수업 방식: transform + ifelse
+transform(df, age_20 = ifelse(age &gt;= 20 &amp; age &lt; 30, 1, 0))</code></pre></div>
+</div>
+
+<h3>④ 스케일링: 열마다 단위가 달라도 같은 눈금에 올려요</h3>
+<div class="two">
+<div>
+<svg class="strip" id="pSvg" viewBox="0 0 640 170" role="img" aria-label="스케일링 방법별 mpg 값의 위치"></svg>
+<div class="btns" id="pBtns" role="group" aria-label="스케일링 방법"><button class="btn" type="button" data-k="raw" aria-pressed="true">원본</button><button class="btn" type="button" data-k="z" aria-pressed="false">Z 점수</button><button class="btn" type="button" data-k="mm" aria-pressed="false">Min-Max</button><button class="btn" type="button" data-k="rb" aria-pressed="false">Robust</button></div>
+<div class="tog"><label><input type="checkbox" id="pOut">이상치 하나 추가 (mpg = 70)</label></div>
+<p class="sum" id="pF"></p>
+<p id="pR"></p>
+</div>
+<div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>방법</th><th>공식</th><th>결과</th><th>이상치</th></tr></thead>
+<tbody>
+<tr><td>Z 점수 (표준화)</td><td>(x − 평균) / sd</td><td>평균 0, sd 1. 범위는 정해져 있지 않아요</td><td>평균·sd가 끌려가요</td></tr>
+<tr><td>Min-Max</td><td>(x − min) / (max − min)</td><td>0 ~ 1</td><td>매우 민감. 나머지가 한쪽에 몰려요</td></tr>
+<tr><td>Robust</td><td>(x − 중앙값) / IQR</td><td>중앙값 0, IQR 1</td><td>강해요</td></tr>
+</tbody></table></div>
+<p class="note">위 그림에서 "이상치 하나 추가"를 켜고 Min-Max를 눌러 보세요. 값 하나가 1을 차지하면서 나머지 32대가 0 ~ 0.4에 몰려요. Robust는 원래 점들의 간격이 거의 그대로예요.</p>
+<div class="code"><pre><code>z &lt;- scale(mtcars$mpg)          # 행렬(32×1)로 돌려줘요
+scaled &lt;- as.data.frame(scale(mtcars))   # 모든 열 한 번에
+
+minmax &lt;- function(x) (x - min(x)) / (max(x) - min(x))
+iris_n &lt;- as.data.frame(lapply(iris[1:4], minmax))
+sapply(iris_n, range)           # 열마다 0, 1
+
+robust &lt;- function(x) (x - median(x)) / IQR(x)</code></pre></div>
+</div>
+</div>
+<p class="note">행렬 파트와 이어지는 점: <code>scale(X)</code>는 열마다 평균을 빼고 sd로 나눠요. <a href="#pca">PCA</a>에서 평균을 빼야 고윳값이 분산이 된다고 했던 그 센터링이고, sd로 나누기까지 하면 <code>prcomp(X, scale. = TRUE)</code>, 즉 상관행렬의 고윳값 분해와 같아요.</p>
+
+<h3>수업 코드 주석 보완</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>코드</th><th>무슨 일이 일어나나</th><th>이렇게 쓰면 안전해요</th></tr></thead>
+<tbody>
+<tr><td><code>attach(weather)</code> 후 <code>weather &lt;- weather[temp &lt; upper, ]</code>를 두 번</td><td><code>temp</code>는 attach할 때의 복사본(26115개)을 계속 가리켜요. 첫 줄에서 행이 줄어든 뒤 두 번째 줄은 길이가 다른 조건으로 걸러서 행이 어긋나요. 주석의 <code>length(temp) # 26115</code>가 그 증거예요.</td><td>한 번에: <code>weather[weather$temp &lt; upper &amp; weather$temp &gt; lower, ]</code>. attach는 이름 충돌이 생기기 쉬워 <code>with()</code>나 <code>$</code>를 권장해요.</td></tr>
+<tr><td><code>within(Cars93, {MPG.highway &gt;= 20 &amp; ...})</code></td><td>{ } 안에서 대입하지 않아 아무것도 바뀌지 않은 Cars93이 그대로 출력돼요.</td><td>뒤의 코드처럼 <code>{ }</code> 안에서 <code>새열 &lt;- ...</code>로 대입하고, 결과를 왼쪽에서 받아요.</td></tr>
+<tr><td><code>length(iris)</code></td><td>데이터 프레임은 열의 리스트라서 <b>열 수</b> 5가 나와요.</td><td>행 수는 <code>nrow()</code>, 크기는 <code>dim()</code>.</td></tr>
+<tr><td><code>str(bwt)</code>가 <code>bwt &lt;- birthwt</code>보다 먼저</td><td>처음 실행하면 객체가 없다는 오류가 나요.</td><td>대입을 먼저 해요.</td></tr>
+<tr><td>이상치 제거 <code>for</code> 반복</td><td>한 열을 거른 데이터로 다음 열의 울타리를 다시 계산해서, 열 순서에 따라 결과가 달라져요.</td><td>주석에 있는 대로 원본 기준 <code>keep</code> 벡터를 만든 뒤 한 번에 걸러요.</td></tr>
+<tr><td><code>weather = na.omit(weather)</code></td><td>열 하나라도 NA인 행은 모두 사라져요. 분석에 안 쓰는 열 때문에 행을 잃을 수 있어요.</td><td>필요한 열만: <code>weather[complete.cases(weather[, c("temp", "humid")]), ]</code></td></tr>
+</tbody></table></div>
+</div></section>
+
 <section class="band" id="cheat"><div class="wrap">
 <h2>R 명령어 한 장 정리</h2>
 <div class="two">
@@ -813,6 +1051,27 @@ scale(X, scale = FALSE)      # 평균 빼기 (센터링)
 zapsmall(M); all.equal(A, B) # 1e-16 정리, 오차 허용 비교
 array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 </div>
+<h3>기술통계 · 전처리</h3>
+<div class="two">
+<div class="code"><pre><code>summary(df); str(df); sapply(df, class)
+mean(x); median(x); var(x); sd(x)
+quantile(x, c(.25, .75)); IQR(x); range(x)
+fivenum(x)                   # boxplot이 쓰는 힌지
+moments::skewness(x); moments::kurtosis(x)
+factor(x, levels, labels)    # 범주화
+cut(x, breaks, labels, right = FALSE)
+table(g); tapply(x, g, mean)
+aggregate(y ~ g, data = df, sum)</code></pre></div>
+<div class="code"><pre><code>colSums(is.na(df))           # 열별 결측 개수
+na.omit(df); df[complete.cases(df), ]
+x[is.na(x)] &lt;- median(x, na.rm = TRUE)
+boxplot.stats(x)$out         # 이상치 값
+scale(X)                     # Z 점수 (열마다)
+(x - min(x)) / (max(x) - min(x))   # Min-Max
+(x - median(x)) / IQR(x)     # Robust
+model.matrix(~ g - 1)        # 원-핫 인코딩
+lm(y ~ a + b, data = df); predict(fit, newdata)</code></pre></div>
+</div>
 </div></section>
 
 <section class="band" id="quiz"><div class="wrap">
@@ -831,6 +1090,10 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <li>2×3 행렬 A에 대해 AAᵀ와 AᵀA의 크기는? 둘 다 대칭인가요?</li>
 <li>평균을 빼지 않은 데이터로 eigen(t(X) %*% X)를 하면 고윳값을 분산이라고 부를 수 있나요?</li>
 <li>T가 3×3×3일 때 T의 Z축과 S(3×3×3)의 A축을 축약하면 결과 모양은?</li>
+<li>x = (2, 4, 4, 4, 5, 5, 7, 9)의 평균, 중앙값, 표본분산은?</li>
+<li>mtcars$mpg에서 Q1 = 15.425, Q3 = 22.8일 때 IQR 상한은? 33.9는 이상치인가요? boxplot.stats는 뭐라고 하나요?</li>
+<li>x = (10, 20, 30, 40, 50)에서 50의 Min-Max 값과 Z 점수는?</li>
+<li>나이를 20·30·40·50대 원-핫 4열로 만들어 절편이 있는 lm에 모두 넣으면 어떻게 되나요?</li>
 </ol>
 </div>
 <div>
@@ -840,10 +1103,16 @@ array(1:27, dim = c(3, 3, 3))  # 3차원 배열</code></pre></div>
 <details><summary>7번 정답</summary><p>λ² − 7λ + 10 = 0 → λ = 5, 2<br>λ = 5: (−1 1 / 2 −2)v = 0 → v = (1, 1)<br>λ = 2: (2 1 / 2 1)v = 0 → v = (1, −2)<br>확인: A(1, −2) = (2, −4) = 2(1, −2)</p></details>
 <details><summary>8 · 9번 정답</summary><p>8. AAᵀ는 2×2, AᵀA는 3×3. 둘 다 항상 대칭이고, 0이 아닌 고윳값은 같아요.<br>9. 아니요. 원점 기준 제곱합이라 평균의 크기가 섞여 있어요. 평균을 빼고 n − 1로 나눈 cov(X)를 분해하거나, svd(Xc)$d^2 / (n − 1)을 쓰면 분산이에요.</p></details>
 <details><summary>10번 정답</summary><p>3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
+<details><summary>11 · 12번 정답</summary><p>11. 평균 40 ÷ 8 = 5, 중앙값 (4 + 5) ÷ 2 = 4.5, 편차제곱합 9+1+1+1+0+0+4+16 = 32 → 분산 32 ÷ 7 ≈ 4.571 (sd ≈ 2.138)<br>12. IQR = 7.375, 상한 22.8 + 11.0625 = 33.8625 → 33.9는 이상치. boxplot.stats는 힌지(15.35, 22.8) 기준 상한 33.975라서 이상치 없음(numeric(0)).</p></details>
+<details><summary>13 · 14번 정답</summary><p>13. Min-Max = (50 − 10) ÷ 40 = 1. 평균 30, sd = √(1000 ÷ 4) ≈ 15.81 → Z ≈ 1.265<br>14. 네 열의 합이 항상 1이라 절편 열과 선형종속이에요. XᵀX가 특이행렬(det = 0)이 되어 계수 하나가 NA로 나와요. 범주 수 − 1개 열만 넣어요.</p></details>
 <div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
 D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
 C * D; C %*% D; det(C); solve(C)
-solve(matrix(c(1, 2, 3, -1), nrow = 2, byrow = TRUE), c(8, 3))</code></pre></div>
+solve(matrix(c(1, 2, 3, -1), nrow = 2, byrow = TRUE), c(8, 3))
+x &lt;- c(2, 4, 4, 4, 5, 5, 7, 9); mean(x); median(x); var(x)
+quantile(mtcars$mpg, .75) + 1.5 * IQR(mtcars$mpg); boxplot.stats(mtcars$mpg)$out
+y &lt;- c(10, 20, 30, 40, 50); (50 - min(y)) / diff(range(y)); scale(y)[5]
+coef(lm(mpg ~ factor(cyl) - 1, data = mtcars))   # 절편 빼면 범주별 평균</code></pre></div>
 </div>
 </div>
 </div></section>
@@ -1258,6 +1527,72 @@ const wd=['나는','오늘','행렬을','공부','한다'];
 let mk='<div class="hd"></div>'+wd.map(w=>'<div class="hd">'+w+'</div>').join('');
 wd.forEach((w,i)=>{mk+='<div class="hd" style="text-align:right">'+w+'</div>'+wd.map((_,j)=>j<=i?'<div class="on">봄</div>':'<div class="off">−∞</div>').join('')});
 $('#mask').innerHTML=mk;
+
+/* descriptive statistics + preprocessing */
+const MPG=[21,21,22.8,21.4,18.7,18.1,14.3,24.4,22.8,19.2,17.8,16.4,17.3,15.2,10.4,10.4,14.7,32.4,30.4,33.9,21.5,15.5,15.2,13.3,19.2,27.3,26,30.4,15.8,19.7,15,21.4];
+const q7=(a,p)=>{const s=[...a].sort((x,y)=>x-y),h=(s.length-1)*p,l=Math.floor(h);return s[l]+(h-l)*(s[Math.min(l+1,s.length-1)]-s[l])};
+function dstat(a){
+  const n=a.length,m=a.reduce((s,x)=>s+x,0)/n,ss=a.reduce((s,x)=>s+(x-m)**2,0),sd=Math.sqrt(ss/(n-1));
+  const m2=ss/n,m3=a.reduce((s,x)=>s+(x-m)**3,0)/n,m4=a.reduce((s,x)=>s+(x-m)**4,0)/n;
+  const q1=q7(a,.25),q3=q7(a,.75);
+  return {n,m,sd,v:ss/(n-1),med:q7(a,.5),q1,q3,iqr:q3-q1,min:Math.min(...a),max:Math.max(...a),sk:m3/m2**1.5,ku:m4/m2**2};
+}
+function nice(lo,hi,k){const r=(hi-lo)/k,p=10**Math.floor(Math.log10(r)),st=[1,2,2.5,5,10].map(x=>x*p).find(x=>x>=r);const t=[];for(let v=Math.ceil(lo/st-1e-9)*st;v<=hi+1e-9;v+=st)t.push(+v.toFixed(6));return t}
+const f2=x=>(Math.abs(x)<5e-4?0:x).toFixed(Math.abs(x)>=100?1:Math.abs(x)>=10?2:3).replace(/\.?0+$/,'')||'0';
+function strip(svg,vals,o){
+  const W=640,L=30,R=610,base=o.base,lo=o.lo,hi=o.hi,X=v=>L+(v-lo)/(hi-lo)*(R-L),s=dstat(vals);
+  let h='';
+  const fence=[s.q1-1.5*s.iqr,s.q3+1.5*s.iqr];
+  if(o.band)h+='<rect x="'+X(s.m-s.sd)+'" y="'+(base-120)+'" width="'+(X(s.m+s.sd)-X(s.m-s.sd))+'" height="'+(o.boxY+40-base+120)+'" style="fill:var(--colbg)"/>';
+  nice(lo,hi,7).forEach(t=>{h+='<line class="gl" x1="'+X(t)+'" x2="'+X(t)+'" y1="'+(o.axisY)+'" y2="'+(o.axisY+6)+'"/><text x="'+X(t)+'" y="'+(o.axisY+22)+'" text-anchor="middle">'+f2(t)+'</text>'});
+  h+='<line class="gl ax" x1="'+L+'" x2="'+R+'" y1="'+o.axisY+'" y2="'+o.axisY+'"/>';
+  const ix=vals.map((v,i)=>i).sort((a,b)=>vals[a]-vals[b]),pos=[];
+  ix.forEach(i=>{const x=X(vals[i]);let lv=0;while(pos.some(p=>p.lv===lv&&Math.abs(p.x-x)<11))lv++;pos.push({x,lv,i})});
+  pos.forEach(p=>{const v=vals[p.i],out=o.flag&&(v<fence[0]||v>fence[1]);h+='<circle cx="'+p.x+'" cy="'+(base-p.lv*11)+'" r="5" style="fill:'+(out||p.i===o.hl?'var(--row)':'var(--ink)')+'"/>'});
+  if(o.box){const y=o.boxY,inF=vals.filter(v=>v>=fence[0]&&v<=fence[1]),wl=Math.min(...inF),wh=Math.max(...inF);
+    h+='<line x1="'+X(wl)+'" x2="'+X(s.q1)+'" y1="'+(y+14)+'" y2="'+(y+14)+'" style="stroke:var(--ink);stroke-width:1.5"/><line x1="'+X(s.q3)+'" x2="'+X(wh)+'" y1="'+(y+14)+'" y2="'+(y+14)+'" style="stroke:var(--ink);stroke-width:1.5"/>';
+    [wl,wh].forEach(w=>h+='<line x1="'+X(w)+'" x2="'+X(w)+'" y1="'+(y+6)+'" y2="'+(y+22)+'" style="stroke:var(--ink);stroke-width:1.5"/>');
+    h+='<rect x="'+X(s.q1)+'" y="'+y+'" width="'+(X(s.q3)-X(s.q1))+'" height="28" rx="3" style="fill:var(--panel);stroke:var(--ink);stroke-width:1.5"/><line x1="'+X(s.med)+'" x2="'+X(s.med)+'" y1="'+(y-2)+'" y2="'+(y+30)+'" style="stroke:var(--ink);stroke-width:3.5"/>';}
+  if(o.mean)h+='<line x1="'+X(s.m)+'" x2="'+X(s.m)+'" y1="'+(base-120)+'" y2="'+(o.boxY+34)+'" style="stroke:var(--col);stroke-width:2.5"/><text x="'+(X(s.m)+6)+'" y="'+(base-104)+'" style="fill:var(--col)">평균 '+f2(s.m)+'</text>';
+  const fl=(v,t)=>{if(v<lo||v>hi)return;h+='<line x1="'+X(v)+'" x2="'+X(v)+'" y1="'+(base-120)+'" y2="'+o.axisY+'" style="stroke:var(--row);stroke-width:1.5;stroke-dasharray:5 4"/><text x="'+(X(v)-4)+'" y="'+(base-88)+'" text-anchor="end" style="fill:var(--row)">'+t+'</text>'};
+  if(o.fence)fl(fence[1],'Q3+1.5·IQR');
+  if(o.sig)fl(s.m+3*s.sd,'평균+3σ');
+  svg.innerHTML=h;return s;
+}
+if($('#sSvg')){
+  const draw=()=>{
+    const mx=+$('#sMax').value,a=MPG.map(v=>v===33.9?mx:v);$('#sMaxO').textContent=f2(mx);
+    const hi=Math.max(40,Math.ceil((mx+4)/5)*5);
+    const s=strip($('#sSvg'),a,{lo:5,hi,base:150,boxY:178,axisY:228,band:$('#sBand').checked,box:$('#sBox').checked,mean:true,fence:$('#sFence').checked,sig:$('#sSig').checked,flag:$('#sFence').checked||$('#sBox').checked,hl:19});
+    const rows=[['평균','mean(x)',s.m],['중앙값','median(x)',s.med],['표준편차','sd(x)',s.sd],['IQR','IQR(x)',s.iqr],['표준오차','sd(x)/sqrt(n)',s.sd/Math.sqrt(s.n)],['변동계수','sd(x)/mean(x)',s.sd/s.m],['왜도','skewness(x)',s.sk],['첨도','kurtosis(x)',s.ku]];
+    $('#sTb').innerHTML=rows.map(r=>'<tr><td>'+r[0]+'</td><td class="n">'+f2(r[2])+'</td><td><code>'+r[1]+'</code></td></tr>').join('');
+    const d=s.m-s.med,up=s.q3+1.5*s.iqr;
+    $('#sMsg').innerHTML='평균이 중앙값보다 <b>'+f2(d)+'</b> 커요. 오른쪽 꼬리가 길어서(왜도 +'+f2(s.sk)+') 큰 값 쪽으로 끌려간 거예요. '+(mx>up?'지금 가장 큰 값 '+f2(mx)+'은 IQR 상한 '+f2(up)+'을 넘는 <span class="bad">이상치</span>예요.':'');
+  };
+  ['#sBand','#sBox','#sFence','#sSig'].forEach(id=>$(id).addEventListener('change',draw));
+  $('#sMax').addEventListener('input',draw);draw();
+}
+if($('#naBars')){
+  const na=[['Ozone',37],['Solar.R',7],['Wind',0],['Temp',0],['Month',0],['Day',0]];
+  $('#naBars').innerHTML=na.map(([k,v])=>'<span>'+k+'</span><div class="bar" style="width:'+(v/37*100)+'%;'+(v?'':'background:transparent')+'"></div><span class="v">'+v+'</span>').join('');
+}
+if($('#ohTb')){
+  const ids=['대한','민국','만세','영원','무궁','발전','행복'],ages=[25,45,31,30,49,53,27];
+  $('#ohTb').innerHTML=ids.map((c,i)=>'<tr><td>'+c+'</td><td class="n">'+ages[i]+'</td>'+[20,30,40,50].map(g=>{const on=ages[i]>=g&&ages[i]<g+10;return '<td class="n"'+(on?' style="background:var(--rowbg);color:var(--row);font-weight:600"':'')+'>'+(on?1:0)+'</td>'}).join('')+'</tr>').join('');
+}
+if($('#pSvg')){
+  let k='raw';
+  const F={raw:['원본','x'],z:['Z 점수','(x − 평균) / sd'],mm:['Min-Max','(x − min) / (max − min)'],rb:['Robust','(x − 중앙값) / IQR']};
+  const tr=(a,k)=>{const s=dstat(a);return a.map(x=>k==='z'?(x-s.m)/s.sd:k==='mm'?(x-s.min)/(s.max-s.min):k==='rb'?(x-s.med)/s.iqr:x)};
+  const draw=()=>{
+    const a=$('#pOut').checked?MPG.concat(70):MPG,b=tr(a,k),mn=Math.min(...b),mx=Math.max(...b),pad=(mx-mn)*.06;
+    const s=strip($('#pSvg'),b,{lo:mn-pad,hi:mx+pad,base:80,boxY:96,axisY:132,mean:false,box:false,hl:$('#pOut').checked?32:-1});
+    $('#pF').textContent=F[k][0]+' = '+F[k][1];
+    $('#pR').innerHTML='변환 후 평균 <b>'+f2(s.m)+'</b> · sd <b>'+f2(s.sd)+'</b> · 중앙값 <b>'+f2(s.med)+'</b> · IQR <b>'+f2(s.iqr)+'</b> · 범위 <b>'+f2(s.min)+' ~ '+f2(s.max)+'</b>';
+  };
+  $$('#pBtns .btn').forEach(b=>b.addEventListener('click',()=>{k=b.dataset.k;$$('#pBtns .btn').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()}));
+  $('#pOut').addEventListener('change',draw);draw();
+}
 
 /* copy buttons */
 $$('.code').forEach(box=>{
