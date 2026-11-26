@@ -136,6 +136,34 @@ input[type=number]{font:16px Literata,serif;width:4.2em;min-height:44px;padding:
 .type ul{grid-column:1/-1;margin:8px 0 0;padding-left:1.2em;font-size:15px}
 .type li{margin:2px 0}
 .type .gain{grid-column:1/-1;margin:6px 0 0;font-size:14.5px;border-top:1px solid var(--rule);padding-top:8px}
+/* tidy / sql / join */
+.sqlgrid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px}
+@media(max-width:820px){.sqlgrid{grid-template-columns:minmax(0,1fr)}}
+.sqlgrid h4{margin:0 0 6px;font-size:15px;color:var(--mute);font-weight:600}
+.codeview{background:var(--panel);border:1px solid var(--rule);border-radius:8px;padding:10px 0;font:14px/1.75 ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;overflow-x:auto}
+.codeview div{padding:0 14px;white-space:pre;border-left:3px solid transparent}
+.codeview div b{display:inline-block;min-width:1.6em;color:var(--mute);font-weight:400}
+.codeview div.on{background:var(--rowbg);border-left-color:var(--row);color:var(--row)}
+.codeview div.on b{color:var(--row);font-weight:700}
+.steps{display:flex;flex-wrap:wrap;gap:6px;margin:10px 0}
+.steps .btn{min-width:44px}
+.jgrid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:16px;align-items:start}
+@media(max-width:820px){.jgrid{grid-template-columns:minmax(0,1fr)}}
+.jt{border-collapse:collapse;width:100%;font-size:14.5px}
+.jt th,.jt td{padding:6px 8px;border-bottom:1px solid var(--rule);text-align:left;white-space:nowrap}
+.jt th{border-bottom:1.5px solid var(--ink)}
+.jt tr.hit td{background:var(--colbg)}
+.jt tr.miss td{background:var(--rowbg)}
+.jt tr.out td{color:var(--mute);text-decoration:line-through}
+.jt td.na{color:var(--row);font-style:italic}
+.jt td.key{font-weight:600}
+.legend i.swatch{width:14px;height:14px}
+.swatch{display:inline-block;width:14px;height:14px;border-radius:3px;vertical-align:-2px;margin-right:6px;border:1px solid var(--rule)}
+.warnbox{border-left:4px solid var(--row);background:var(--rowbg);padding:12px 16px;border-radius:0 8px 8px 0;margin:0 0 1.2em}
+.warnbox p{margin:0 0 .5em;max-width:none}.warnbox p:last-child{margin:0}
+.wl{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1.2fr);gap:12px;align-items:center}
+@media(max-width:700px){.wl{grid-template-columns:minmax(0,1fr)}}
+.wl .arr{font-size:16px;color:var(--mute);text-align:center}
 /* mask */
 .mask{display:inline-grid;grid-template-columns:auto repeat(5,minmax(52px,auto));gap:3px;font-size:14px}
 .mask div{padding:8px 6px;text-align:center;border-radius:3px;white-space:nowrap}
@@ -180,7 +208,7 @@ ol.quiz>li{margin:0 0 12px}
 </header>
 
 <nav class="scroll" aria-label="목차">
-<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#three">3차원 확장</a><a href="#types">행렬의 종류</a><a href="#stats">기술통계</a><a href="#prep">전처리</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
+<a href="#basics">기본 용어</a><a href="#elementwise">요소 연산</a><a href="#dot">내적</a><a href="#matmul">행렬곱</a><a href="#order">순서</a><a href="#geom">크기·방향</a><a href="#det">행렬식·역행렬</a><a href="#systems">연립방정식</a><a href="#eigen">고유벡터</a><a href="#pca">PCA·SVD</a><a href="#three">3차원 확장</a><a href="#types">행렬의 종류</a><a href="#stats">기술통계</a><a href="#prep">전처리</a><a href="#tidy">tidyverse</a><a href="#dplyr">dplyr·SQL 순서</a><a href="#join">join</a><a href="#dbsql">DB 연결</a><a href="#cheat">R 명령어</a><a href="#quiz">확인 문제</a>
 </nav>
 
 <section class="band" id="basics"><div class="wrap">
@@ -1022,6 +1050,305 @@ robust &lt;- function(x) (x - median(x)) / IQR(x)</code></pre></div>
 </tbody></table></div>
 </div></section>
 
+<section class="band" id="tidy"><div class="wrap">
+<h2>tidyverse: 데이터를 파이프로 흘리고, 모양을 목적에 맞게 바꿔요</h2>
+<p>11/26 수업은 앞의 전처리를 <b>tidyverse(dplyr, tidyr)</b>로 다시 쓰는 내용이에요. 개념은 같고, 쓰는 방식이 "위에서 아래로 읽히는 SQL 같은 문법"으로 바뀌어요. <code>library(tidyverse)</code> 한 줄이면 dplyr, tidyr, tibble, ggplot2가 함께 불러와져요.</p>
+<div class="two">
+<div>
+<h3 style="margin-top:0">tibble: data.frame의 개선판</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>구분</th><th>data.frame</th><th>tibble</th></tr></thead>
+<tbody>
+<tr><td>출력</td><td>모든 행 출력</td><td>앞 10행, 크기와 열 자료형(<code>&lt;dbl&gt;</code>) 표시</td></tr>
+<tr><td><code>df[, 1]</code></td><td>벡터로 바뀜</td><td>tibble 유지 (<code>df[[1]]</code>은 벡터)</td></tr>
+<tr><td>행 이름</td><td>있음</td><td>없음 → <code>rownames_to_column("car")</code>로 열로 꺼내기</td></tr>
+<tr><td><code>typeof()</code></td><td colspan="2">둘 다 "list" (열들의 리스트)</td></tr>
+</tbody></table></div>
+<h3>파이프: 앞의 결과를 다음 함수의 첫 번째 인자로</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>파이프</th><th>패키지</th><th>하는 일</th></tr></thead>
+<tbody>
+<tr><td><code>%&gt;%</code></td><td>magrittr (dplyr가 내보냄)</td><td>결과를 다음으로. 자리 지정은 <code>.</code></td></tr>
+<tr><td><code>|&gt;</code></td><td>R 4.1+ 기본</td><td>괄호 필수 <code>sqrt()</code>, 자리 지정은 <code>data = _</code> (이름 붙은 인자만)</td></tr>
+<tr><td><code>%T&gt;%</code></td><td>magrittr</td><td>오른쪽을 실행만 하고 <b>원래 데이터</b>를 다음으로 (plot, print로 중간 확인)</td></tr>
+<tr><td><code>%&lt;&gt;%</code></td><td>magrittr</td><td>최종 결과를 <b>원래 변수에 저장</b> (원본이 사라지니 주의)</td></tr>
+</tbody></table></div>
+<p class="note"><b>중첩 호출 vs 고차 함수:</b> <code>mean(log(sqrt(x)))</code>는 결과값을 넘기는 함수 합성이에요. 함수 자체를 넘기는 <code>sapply(x, sqrt)</code>, <code>across(..., mean)</code>이 고차 함수예요. tidyverse 함수는 첫 인자가 데이터라 파이프와 잘 맞지만, <code>lm(formula, data)</code>처럼 아닌 함수도 있어요.</p>
+</div>
+<div>
+<div class="code"><pre><code>x &lt;- c(10, 20, 30)
+mean(log(sqrt(x)))              # 중첩 호출: 안쪽부터 읽음
+x %&gt;% sqrt() %&gt;% log() %&gt;% mean()   # 1.449919
+x |&gt; sqrt() |&gt; log() |&gt; mean()      # 같은 값
+
+a %&gt;% sin(.)       # . = 넘어온 값의 자리 (첫 인자면 생략 가능)
+a |&gt; sin(_)        # ❌ _ 는 이름 붙은 인자에만
+a |&gt; sin(x = _)    # ✅
+mtcars |&gt; lm(mpg ~ wt, data = _)    # 첫 번째가 아닌 자리
+
+mtcars %&gt;% filter(mpg &gt; 20) %T&gt;% print() %&gt;%
+  summarise(avg_hp = mean(hp))      # 14대 출력 후 88.5
+
+x &lt;- c(-3, 2, -1, 4)
+x %&lt;&gt;% abs %&gt;% sort                 # x 가 1 2 3 4 로 바뀜</code></pre></div>
+<p class="note"><b>%&gt;%는 줄 끝에.</b> 줄 맨 앞에 두면 R이 앞 줄에서 명령이 끝난 것으로 보고 실행해요. 반대로 마지막 줄 끝에 <code>%&gt;%</code>가 남으면 빈 줄을 건너 다음 명령까지 이어 붙여서 "함수가 아닌 것을 적용" 에러가 나요. ggplot의 <code>+</code>도 같은 규칙이에요.</p>
+</div>
+</div>
+
+<h3>tidyr: 넓은 형태 ↔ 긴 형태</h3>
+<p><b>tidy 데이터</b>는 "행 하나 = 관측 하나, 열 하나 = 변수 하나"예요. <code>math_mid</code>처럼 열 이름에 정보가 두 개(과목, 시험) 들어 있으면 과목별 집계가 불편해요. <b>긴 형태는 집계(group_by)에, 넓은 형태는 열끼리 계산(mutate)에</b> 편해서 목적에 따라 오가요.</p>
+<div class="wl">
+<div class="tbl" style="margin:0"><table class="jt"><thead><tr><th>name</th><th>math_mid</th><th>math_final</th><th>eng_mid</th><th>eng_final</th></tr></thead>
+<tbody><tr><td>Kim</td><td>80</td><td>90</td><td>75</td><td>82</td></tr><tr><td>Lee</td><td>70</td><td>85</td><td>88</td><td>91</td></tr></tbody></table></div>
+<div class="arr">pivot_longer →<br>← pivot_wider</div>
+<div class="tbl" style="margin:0"><table class="jt"><thead><tr><th>name</th><th>subject</th><th>exam</th><th>score</th></tr></thead>
+<tbody><tr><td>Kim</td><td>math</td><td>mid</td><td>80</td></tr><tr><td>Kim</td><td>math</td><td>final</td><td>90</td></tr><tr><td>Kim</td><td>eng</td><td>mid</td><td>75</td></tr><tr><td colspan="4" class="note">… 2명 × 4칸 = 8행</td></tr></tbody></table></div>
+</div>
+<div class="two" style="margin-top:16px">
+<div class="code"><pre><code>df_long &lt;- df |&gt;
+  pivot_longer(cols = -name,              # name 빼고 전부 세로로
+               names_to = "subject_exam", # 열 이름이 들어갈 열
+               values_to = "score") |&gt;    # 값이 들어갈 열
+  separate_wider_delim(subject_exam, delim = "_",
+                       names = c("subject", "exam")) |&gt;   # 또는 separate()
+  mutate(exam    = factor(exam,    levels = c("mid", "final")),
+         subject = factor(subject, levels = c("math", "eng")))
+
+df_long |&gt; group_by(exam) |&gt; summarise(평균 = mean(score))   # mid 78.25, final 87
+
+df_long |&gt; unite("subject_exam", subject, exam, sep = "_")  # 다시 합치기
+df_long |&gt; filter(subject == "math") |&gt;
+  pivot_wider(id_cols = c(name, subject),
+              names_from = exam, values_from = score) |&gt;
+  mutate(향상 = final - mid)          # Kim +10, Lee +15</code></pre></div>
+<div>
+<p><b>factor로 순서를 정하는 이유:</b> 문자는 알파벳순이라 final → mid로 정렬돼요. <code>levels</code>로 시간 순서를 정하면 집계 결과, 표, 그래프 축이 모두 mid → final로 나와요. levels에 없는 값은 <b>조용히 NA</b>가 되니 변환 후 <code>sum(is.na())</code>로 확인하세요.</p>
+<p><b>피벗 전 중복 키 확인:</b> 같은 학생·과목·시험 행이 두 개면 <code>pivot_wider()</code>가 한 칸에 값 두 개를 넣으려다 경고를 내고 리스트 열을 만들어요.</p>
+<div class="code"><pre><code>df_long |&gt; count(name, subject, exam) |&gt; filter(n &gt; 1)   # 비어 있어야 안전</code></pre></div>
+<p><b>ggplot:</b> 막대는 y축을 0부터(길이로 비교), 선은 범위를 잘라도 돼요(기울기로 비교). x가 factor인 선그래프는 <code>group = name</code>이 있어야 점끼리 이어져요. <code>limits</code> 밖의 값은 NA가 되어 사라지니, 보이는 범위만 줄이려면 <code>coord_cartesian(ylim = )</code>을 써요.</p>
+</div>
+</div>
+
+<h3>tidyr로 결측치 처리</h3>
+<div class="two">
+<div class="tbl"><table class="stack">
+<thead><tr><th>함수</th><th>하는 일</th><th>점수 예시 (4명, 학생마다 한 과목씩 NA)</th></tr></thead>
+<tbody>
+<tr><td><code>drop_na()</code></td><td>어느 열이든 NA면 행 삭제</td><td>지혜 1명만 남음 (75% 손실)</td></tr>
+<tr><td><code>drop_na(과학)</code></td><td>지정한 열이 NA인 행만 삭제</td><td>철수만 빠지고 3명</td></tr>
+<tr><td><code>replace_na(list(수학 = 0))</code></td><td>열마다 정한 값으로</td><td>0 대체 시 수학 평균 81.7 → 61.25</td></tr>
+<tr><td><code>fill(수학, .direction = "down")</code></td><td>위(또는 아래) 행 값으로</td><td>영희 수학 = 80(down) / 75(up)</td></tr>
+</tbody></table></div>
+<div>
+<p><b>0 대체는 0에 의미가 있을 때만:</b> 결시 = 0점 규칙, 판매 없음 = 0개, 횟수 데이터. 측정 누락이나 0이 불가능한 값(키, 혈압)에는 쓰면 안 돼요.</p>
+<p><b>fill()은 행 순서에 의미가 있을 때만:</b> 시계열의 직전 값(LOCF), 엑셀 병합 셀을 불러왔을 때. 서로 다른 학생처럼 독립적인 행에 쓰면 정렬만 바꿔도 결과가 달라져요.</p>
+<div class="code"><pre><code>df |&gt; mutate(across(c(수학, 영어, 과학),
+                    ~ replace_na(.x, mean(.x, na.rm = TRUE))))</code></pre></div>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="dplyr"><div class="wrap">
+<h2>dplyr 동사는 SQL 절과 1:1로 대응하고, 쓰는 순서는 SQL의 실행 순서를 따라가요</h2>
+<div class="two">
+<div>
+<div class="tbl"><table class="stack">
+<thead><tr><th>dplyr</th><th>SQL</th><th>하는 일</th></tr></thead>
+<tbody>
+<tr><td><code>select()</code></td><td>SELECT 열</td><td>열 고르기 (<code>mpg:hp</code>, <code>-cyl</code>, <code>starts_with("d")</code>, <code>where(is.numeric)</code>)</td></tr>
+<tr><td><code>filter()</code></td><td>WHERE</td><td>행 고르기. 쉼표 = AND, <code>|</code> = OR, <code>%in%</code> = IN</td></tr>
+<tr><td><code>arrange()</code></td><td>ORDER BY</td><td>정렬. <code>desc()</code> 또는 숫자면 <code>-x</code></td></tr>
+<tr><td><code>mutate()</code></td><td>SELECT 식 AS 별칭</td><td>행 수 유지하며 열 추가·수정 (파생변수)</td></tr>
+<tr><td><code>summarise()</code></td><td>AVG(), COUNT()</td><td>그룹마다 한 행으로 요약</td></tr>
+<tr><td><code>group_by()</code></td><td>GROUP BY</td><td>계산 단위 지정</td></tr>
+<tr><td>집계 후 <code>filter()</code></td><td>HAVING</td><td>요약 결과로 거르기</td></tr>
+<tr><td><code>n()</code> / <code>n_distinct(x)</code></td><td>COUNT(*) / COUNT(DISTINCT x)</td><td>행 수 / 중복 뺀 개수</td></tr>
+<tr><td><code>head(n)</code>, <code>slice_max(x, n = )</code></td><td>LIMIT</td><td>상위 n개</td></tr>
+<tr><td><code>rename(새 = 옛)</code>, <code>distinct()</code></td><td>AS, DISTINCT</td><td>이름 바꾸기, 중복 제거</td></tr>
+</tbody></table></div>
+</div>
+<div>
+<p><b>mutate vs summarise:</b> <code>mutate()</code>는 행 수를 그대로 두고(그룹 평균을 각 행에 붙이기 등), <code>summarise()</code>는 그룹마다 한 행으로 줄여요. 그래서 <code>summarise()</code>를 연달아 쓰면 그룹 열과 방금 만든 열만 남아서, 원래 열(amount)을 찾지 못해요. <b>한 그룹의 통계는 summarise 하나에 모두</b> 넣으세요.</p>
+<p><b>예전 함수 → 권장 함수:</b> <code>sample_n()</code> → <code>slice_sample(n = )</code>, <code>top_n(x, 1, v)</code> → <code>slice_max(v, n = 1)</code>(결과가 정렬됨), <code>top_n(x, 2, -v)</code> → <code>slice_min(v, n = 2)</code>.</p>
+<p><b>이름 충돌:</b> MASS를 불러오면 <code>select()</code>가 MASS 것으로 바뀌어 "unused arguments" 에러가 나요. <code>dplyr::select()</code>처럼 패키지를 붙이세요.</p>
+<p><b>if_else vs ifelse:</b> dplyr의 <code>if_else()</code>는 참·거짓 결과의 자료형이 같아야 해서 숫자 열에 NA를 넣을 땐 <code>NA_real_</code>을 써요. 3개 이상 구간은 <code>case_when(조건 ~ 값, ..., TRUE ~ 기본값)</code>, 위에서부터 처음 맞는 조건이 적용돼요.</p>
+<p><b>행 방향 계산:</b> dplyr는 열 방향이 기본이라 <code>mutate(총점 = sum(수학, 영어))</code>는 전체 합 하나를 모든 행에 넣어요. 학생별 총점은 <code>rowSums(pick(수학, 영어, 과학))</code>(<code>%&gt;%</code>에서는 <code>select(., ...)</code>도 가능).</p>
+<p><b>across의 추가 인자:</b> <code>across(-학생, mean, na.rm = TRUE)</code>는 dplyr 1.1부터 경고가 나요. <code>across(-학생, \(x) mean(x, na.rm = TRUE))</code>처럼 함수 안에 넣으세요.</p>
+</div>
+</div>
+
+<h3 id="sqlorder">SQL 작성 순서 · 실행 순서 · dplyr 순서 비교</h3>
+<p>SQL은 <b>SELECT를 맨 앞에 쓰지만, 실제로는 FROM부터 실행</b>돼요. dplyr 파이프는 이 <b>실행 순서대로</b> 위에서 아래로 써요. 그래서 SQL의 "SELECT에서 붙인 별칭을 WHERE에서 못 쓰는" 규칙도, dplyr의 "select로 뺀 열을 다음 filter에서 못 쓰는" 에러도 같은 원리예요. 단계 버튼을 누르면 세 코드에서 같은 단계가 함께 강조돼요. 예제는 수업의 q15(도시별 고객 수·총액·평균, 총액 순)에 WHERE, HAVING, LIMIT을 더한 거예요.</p>
+<div class="steps" id="sqSteps" role="group" aria-label="실행 단계"></div>
+<p class="big" id="sqTitle" style="font-size:22px;margin-bottom:.2em"></p>
+<p id="sqDesc" style="max-width:none"></p>
+<div class="sqlgrid">
+<div><h4>① SQL 작성 순서 (우리가 쓰는 순서)</h4><div class="codeview" id="sqWrite"></div></div>
+<div><h4>② SQL 실행 순서 (DB가 처리하는 순서)</h4><div class="codeview" id="sqExec"></div></div>
+<div><h4>③ dplyr 파이프 (실행 순서대로 씀)</h4><div class="codeview" id="sqDplyr"></div></div>
+</div>
+<p class="note" style="margin-top:10px">줄 앞 숫자는 실행 순서 번호예요. ①은 번호가 뒤섞여 있고(5 → 1 → 2 → 3 → 4 → 6 → 7), ②와 ③은 차례로 내려가요. ③에서 HAVING에 해당하는 <code>filter()</code>가 summarise 다음 줄에 오는 건, 집계한 값이 있어야 거를 수 있기 때문이에요.</p>
+<div class="two">
+<div>
+<h3>순서에서 나오는 규칙</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>규칙</th><th>SQL에서</th><th>dplyr에서</th></tr></thead>
+<tbody>
+<tr><td>다른 테이블의 열은 결합 뒤에</td><td>JOIN 전에는 없음</td><td><code>select(product)</code>는 <code>*_join()</code> 다음에</td></tr>
+<tr><td>조건에 쓸 열은 지우기 전에</td><td>WHERE가 SELECT보다 먼저</td><td><code>filter()</code> 먼저, 출력용 <code>select()</code>는 마지막</td></tr>
+<tr><td>집계 결과로 거르기</td><td>WHERE가 아니라 HAVING</td><td><code>summarise()</code> 뒤의 <code>filter()</code></td></tr>
+<tr><td>정렬은 마지막</td><td>ORDER BY는 거의 끝</td><td>DB 쿼리에서 <code>arrange()</code> 뒤에 집계·join이 오면 "ORDER BY is ignored in subqueries"</td></tr>
+<tr><td>줄이고 나서 가져오기</td><td>LIMIT</td><td><code>collect()</code>는 마지막에</td></tr>
+</tbody></table></div>
+</div>
+<div>
+<h3>수업 문제에서 나온 실수</h3>
+<div class="code"><pre><code># ❌ select로 total을 빼고 filter → 열을 찾을 수 없음 (과제 8번)
+select(pay201801, empno, pay) |&gt; filter(total &gt;= 300)
+# ✅
+pay201801 |&gt; filter(total &gt;= 300) |&gt; select(empno, total)   # 104: 345, 105: 1000
+
+# ❌ product는 orders에 있음
+customers_tbl |&gt; select(customer_id, name, product)
+# ✅
+customers_tbl |&gt; inner_join(orders_tbl, by = "customer_id") |&gt;
+  select(name, product)
+
+# ❌ na.rm 이 mean 밖 → na.rm 이라는 열이 생김
+summarise(평균 = mean(점수), na.rm = TRUE)
+# ✅
+summarise(평균 = mean(점수, na.rm = TRUE))</code></pre></div>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="join"><div class="wrap">
+<h2>join은 "어느 쪽 행을 전부 남길까"를 고르는 일이에요</h2>
+<p>수업 데이터에는 <b>일부러 짝이 안 맞는 값</b>이 있어요. 주문 106의 고객 6은 고객 테이블에 없고, 고객 4(Choi)·5(Jung)는 주문이 없어요. join 종류를 바꿔 보면서 어느 행이 남고, 어디에 NA가 생기는지 보세요. Kim과 Park은 주문이 2건씩이라 결과에서 <b>고객 정보가 복제</b>돼요(1:N).</p>
+<div class="steps" id="jType" role="group" aria-label="join 종류"></div>
+<p class="big" id="jHead" style="font-size:24px;margin-bottom:.2em"></p>
+<p id="jDesc" style="max-width:none"></p>
+<div class="legend"><span><i class="swatch" style="background:var(--colbg)"></i>짝이 있는 행</span><span><i class="swatch" style="background:var(--rowbg)"></i>짝이 없지만 남는 행</span><span><i class="swatch" style="background:var(--bg)"></i><s>결과에서 빠지는 행</s></span><span><em style="color:var(--row)">NA</em> = 짝이 없어서 비는 칸</span></div>
+<div class="jgrid">
+<div>
+<p class="note" style="margin:6px 0 4px">customers (왼쪽 x)</p>
+<div class="tbl" style="margin-bottom:10px"><table class="jt" id="jL"></table></div>
+<p class="note" style="margin:6px 0 4px">orders (오른쪽 y)</p>
+<div class="tbl"><table class="jt" id="jR"></table></div>
+</div>
+<div>
+<p class="note" style="margin:6px 0 4px" id="jResLab">결과</p>
+<div class="tbl"><table class="jt" id="jRes"></table></div>
+<div class="code"><pre><code id="jCode"></code></pre></div>
+</div>
+</div>
+<div class="two">
+<div>
+<h3>"A에는 있는데 B에는 없는 것" 찾기</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>문제</th><th>기준(왼쪽)</th><th>코드</th><th>결과</th></tr></thead>
+<tbody>
+<tr><td>고객 정보가 없는 주문</td><td>orders</td><td><code>orders |&gt; left_join(customers) |&gt; filter(is.na(name))</code></td><td>주문 106</td></tr>
+<tr><td>주문이 없는 고객</td><td>customers</td><td><code>customers |&gt; left_join(orders) |&gt; filter(is.na(order_id))</code></td><td>Choi, Jung</td></tr>
+<tr><td>부서 테이블에 없는 직원</td><td>employees</td><td><code>employees |&gt; anti_join(departments, by = "dept_id")</code></td><td>Eom (dept 40)</td></tr>
+</tbody></table></div>
+<p class="note">기준 테이블을 반대로 잡으면 NA가 생길 수 없어서 결과가 0행이에요. <code>is.na()</code>는 SQL에서 <code>IS NULL</code>로, <code>anti_join()</code>은 <code>NOT EXISTS</code> 서브쿼리로 바뀌어요.</p>
+</div>
+<div>
+<h3>join 뒤 개수 세기: COUNT(*)와 COUNT(열)</h3>
+<p>left_join 후 <code>n()</code>으로 주문 수를 세면 주문이 없는 Choi·Jung도 NA 행 하나 때문에 <b>1건</b>으로 세져요. 주문 열에 값이 있는 행만 세야 해요. 같은 이유로 "도시별 고객 수"는 주문 행 수 <code>n()</code>이 아니라 <code>n_distinct(customer_id)</code>예요.</p>
+<div class="code"><pre><code>customers_tbl |&gt; left_join(orders_tbl, by = "customer_id") |&gt;
+  group_by(city) |&gt;
+  summarise(고객수 = n_distinct(customer_id),      # COUNT(DISTINCT ...)
+            주문수 = sum(ifelse(is.na(order_id), 0, 1), na.rm = TRUE),
+            총액   = sum(amount, na.rm = TRUE), .groups = "drop") |&gt;
+  arrange(desc(총액)) |&gt; collect()
+# Seoul 2 4 1895 / Busan 2 1 120 / Daegu 1 0 0</code></pre></div>
+<p><b>left = 반대쪽 right:</b> <code>A |&gt; left_join(B)</code>와 <code>B |&gt; right_join(A)</code>는 행이 같고 열 순서만 달라요. 남길 테이블을 맨 앞에 두고 left_join으로 통일하면 읽기 쉬워요(예전 SQLite는 RIGHT JOIN을 지원하지 않았어요). 키가 중복되면 join 결과 행이 복제되니, 먼저 <code>count(key) |&gt; filter(n &gt; 1)</code>로 확인하세요.</p>
+</div>
+</div>
+</div></section>
+
+<section class="band" id="dbsql"><div class="wrap">
+<h2>R에서 DB에 질의하기: 계산은 DB가, 결과만 R로</h2>
+<div class="two">
+<div>
+<h3 style="margin-top:0">dbplyr: dplyr 코드를 SQL로 번역</h3>
+<div class="pipe"><span>dbConnect</span><b>→</b><span>copy_to / tbl</span><b>→</b><span>dplyr 동사</span><b>→</b><span>show_query()</span><b>→</b><span>collect()</span></div>
+<p><code>tbl(con, "orders")</code>로 만든 객체는 데이터가 아니라 <b>"이런 SQL을 실행하라"는 계획</b>이에요(지연 실행). 출력하면 <code>Source: SQL [?? x 3]</code>처럼 행 수를 모르고, <code>collect()</code>할 때 DB가 실행해서 tibble로 가져와요. 데이터가 커도 R 메모리를 쓰지 않아요. 스파크(sparklyr)도 같은 방식이에요.</p>
+<div class="code"><pre><code>library(DBI); library(dplyr); library(dbplyr)
+con &lt;- dbConnect(RSQLite::SQLite(), ":memory:")   # 철자 주의: ":memery:"면 파일이 생김
+copy_to(con, orders, "orders", temporary = FALSE, overwrite = TRUE)
+orders_tbl &lt;- tbl(con, "orders")
+
+q3 &lt;- orders_tbl |&gt;
+  group_by(customer_id) |&gt;
+  summarise(total_amount = sum(amount, na.rm = TRUE),   # SQL SUM은 NULL을 항상 제외
+            order_count  = n()) |&gt;
+  arrange(desc(total_amount))
+show_query(q3)
+# SELECT customer_id, SUM(amount) AS total_amount, COUNT(*) AS order_count
+# FROM orders GROUP BY customer_id ORDER BY total_amount DESC
+collect(q3)      # 1: 1550(2) / 6: 900(1) / 3: 345(2) / 2: 120(1)
+nrow(q3)         # NA  ← 아직 DB 쿼리
+dbDisconnect(con)</code></pre></div>
+<p class="note"><code>paste(collapse = )</code>처럼 SQL로 번역할 수 없는 R 함수는 <code>collect()</code> 뒤에 쓰세요. 1500 × 1.1이 1650.0000000000002인 것처럼 금액 계산은 <code>round()</code>로 정리하세요. R의 <code>==</code>는 SQL의 <code>=</code>로, 큰따옴표 문자열은 작은따옴표로 바뀌어요.</p>
+</div>
+<div>
+<h3 style="margin-top:0">DBI 함수 정리</h3>
+<div class="tbl"><table class="stack">
+<thead><tr><th>함수</th><th>하는 일</th></tr></thead>
+<tbody>
+<tr><td><code>dbConnect(SQLite(), "파일.sqlite")</code></td><td>파일 DB (없으면 생성, 닫아도 남음)</td></tr>
+<tr><td><code>dbConnect(RMariaDB::MariaDB(), dbname, host, port, user, password)</code></td><td>MySQL·MariaDB 서버</td></tr>
+<tr><td><code>dbListTables(con)</code></td><td>테이블 목록</td></tr>
+<tr><td><code>dbReadTable(con, "t")</code></td><td>테이블 전체를 R로 (큰 테이블은 <code>tbl()</code>로 걸러서)</td></tr>
+<tr><td><code>dbWriteTable(con, "t", df, overwrite / append = TRUE)</code></td><td>R 데이터를 테이블로. 두 번째 실행은 옵션 필요. <b>행 이름은 저장 안 됨</b></td></tr>
+<tr><td><code>dbGetQuery(con, "SELECT ...")</code></td><td>결과가 있는 쿼리 → data.frame</td></tr>
+<tr><td><code>dbExecute(con, "INSERT / UPDATE / SET / CALL ...")</code></td><td>실행만 → 영향받은 행 수</td></tr>
+<tr><td><code>dbSendQuery</code> → <code>dbBind</code> → <code>dbFetch</code> → <code>dbClearResult</code></td><td>매개변수 쿼리를 단계별로</td></tr>
+<tr><td><code>dbRemoveTable(con, "t")</code>, <code>dbDisconnect(con)</code></td><td>정리, 연결 종료 (항상 맨 마지막)</td></tr>
+</tbody></table></div>
+<p class="note">DB에서 읽은 데이터는 <b>읽은 순간의 사진</b>이에요. 서버에 INSERT한 뒤 확인하려면 연결을 닫기 전에 다시 읽어야 해요. 실제 서버에서 <code>overwrite = TRUE</code>는 같은 이름 테이블을 지우고 다시 만드니, 연습 테이블에는 <code>practice_</code> 같은 접두어를 붙이세요.</p>
+</div>
+</div>
+
+<div class="two">
+<div>
+<h3>보안: 비밀번호와 계정</h3>
+<div class="warnbox">
+<p><b>비밀번호를 코드에 쓰지 않아요.</b> 공개 저장소에 올라가면 누구나 서버에 접속할 수 있고, 파일에서 지워도 커밋 기록에 남아요. 한 번이라도 노출됐다면 비밀번호를 바꾸세요.</p>
+<p><b>root 대신 분석용 읽기 전용 계정</b>, GCP 방화벽은 3306 포트를 학원·집 IP로만 열어요.</p>
+</div>
+<div class="code"><pre><code># ~/.Renviron (file.edit("~/.Renviron") 또는 usethis::edit_r_environ())
+#   DB_HOST=...    DB_USER=...    DB_PW=...      ← 저장 후 R 재시작
+con &lt;- dbConnect(RMariaDB::MariaDB(), dbname = "jsdb",
+                 host = Sys.getenv("DB_HOST"), port = 3306,
+                 user = Sys.getenv("DB_USER"),
+                 password = rstudioapi::askForPassword("DB 비밀번호"))  # 공용 PC
+
+-- 서버에서: 분석용 계정
+CREATE USER 'r_reader'@'%' IDENTIFIED BY '...';
+GRANT SELECT ON jsdb.* TO 'r_reader'@'%';</code></pre></div>
+</div>
+<div>
+<h3>매개변수 쿼리와 저장 프로시저</h3>
+<p>값을 문자열로 붙이면 <code>x' OR '1'='1</code> 같은 입력이 SQL 문법이 되어 전체 데이터가 새어 나가요(SQL 인젝션). <code>?</code> 자리에 값을 따로 넣으면 순수한 데이터로만 들어가요. Flask의 <code>cursor.execute("... %s", (name,))</code>와 같은 원리예요.</p>
+<div class="code"><pre><code>dbGetQuery(con, "SELECT * FROM student WHERE name = ?",
+           params = list("고려인"))
+
+# 저장 프로시저: ? = IN 매개변수, @out_cnt = OUT (세션 변수)
+dbExecute(con, "SET @out_cnt = NULL")
+dbExecute(con, "CALL student_insert(?, ?, ?, ?, ?, @out_cnt)",
+          params = list("건강해", 100, 100, 100, "CH00000001"))
+dbGetQuery(con, "SELECT @out_cnt AS out_cnt")$out_cnt   # 열 이름 = 별칭
+dbGetQuery(con, "SHOW CREATE PROCEDURE student_insert")  # 정의 보기</code></pre></div>
+<p class="note"><code>@</code> 변수는 <b>같은 연결</b> 안에서만 유지돼요. SET → CALL → SELECT를 같은 <code>con</code>으로, 연결을 닫기 전에 실행하세요. 다시 실행하면 같은 학생이 또 들어가요. SELECT 결과를 돌려주는 프로시저는 <code>dbSendQuery</code> + <code>dbFetch</code> + <code>dbClearResult</code>로 받아요.</p>
+</div>
+</div>
+</div></section>
+
+
 <section class="band" id="cheat"><div class="wrap">
 <h2>R 명령어 한 장 정리</h2>
 <div class="two">
@@ -1072,6 +1399,34 @@ scale(X)                     # Z 점수 (열마다)
 model.matrix(~ g - 1)        # 원-핫 인코딩
 lm(y ~ a + b, data = df); predict(fit, newdata)</code></pre></div>
 </div>
+<h3>tidyverse · DB (11/26)</h3>
+<div class="two">
+<div class="code"><pre><code>library(tidyverse)        # dplyr, tidyr, tibble, ggplot2
+df |&gt; select(a, b) |&gt; filter(x &gt; 1, y == "A") |&gt;
+  mutate(z = x * 2) |&gt; arrange(desc(z))
+df |&gt; group_by(g) |&gt; summarise(m = mean(x, na.rm = TRUE),
+                               n = n(), .groups = "drop")
+df |&gt; summarise(across(where(is.numeric), \(v) mean(v, na.rm = TRUE)))
+df |&gt; mutate(k = case_when(x &gt;= 90 ~ "A", x &gt;= 80 ~ "B", TRUE ~ "C"))
+df |&gt; slice_max(x, n = 3); df |&gt; count(g)
+pivot_longer(df, -id, names_to = "k", values_to = "v")
+pivot_wider(long, names_from = k, values_from = v)
+separate_wider_delim(df, col, delim = "_", names = c("a", "b"))
+drop_na(df, col); replace_na(df, list(col = 0)); fill(df, col)
+left_join(x, y, by = "key"); anti_join(x, y, by = "key")
+rownames_to_column(mtcars, "car")</code></pre></div>
+<div class="code"><pre><code>library(DBI)
+con &lt;- dbConnect(RSQLite::SQLite(), ":memory:")
+copy_to(con, df, "t", temporary = FALSE, overwrite = TRUE)
+q &lt;- tbl(con, "t") |&gt; filter(x &gt; 1)
+show_query(q); collect(q)
+dbListTables(con); dbReadTable(con, "t")
+dbWriteTable(con, "t2", df, overwrite = TRUE)
+dbGetQuery(con, "SELECT * FROM t WHERE id = ?", params = list(3))
+dbExecute(con, "DELETE FROM t WHERE id = ?", params = list(3))
+dbDisconnect(con)
+Sys.getenv("DB_PW"); rstudioapi::askForPassword()</code></pre></div>
+</div>
 </div></section>
 
 <section class="band" id="quiz"><div class="wrap">
@@ -1094,6 +1449,11 @@ lm(y ~ a + b, data = df); predict(fit, newdata)</code></pre></div>
 <li>mtcars$mpg에서 Q1 = 15.425, Q3 = 22.8일 때 IQR 상한은? 33.9는 이상치인가요? boxplot.stats는 뭐라고 하나요?</li>
 <li>x = (10, 20, 30, 40, 50)에서 50의 Min-Max 값과 Z 점수는?</li>
 <li>나이를 20·30·40·50대 원-핫 4열로 만들어 절편이 있는 lm에 모두 넣으면 어떻게 되나요?</li>
+<li>dplyr 코드 <code>df |&gt; filter(x &gt; 1) |&gt; group_by(g) |&gt; summarise(m = mean(y)) |&gt; filter(m &gt; 10) |&gt; arrange(desc(m))</code>에서 각 동사는 SQL의 어느 절이 되나요? SQL 실행 순서대로 나열해 보세요.</li>
+<li>customers(5명) <code>left_join</code> orders(6건, 그중 1건은 없는 고객의 주문)의 결과 행 수는? 주문이 없는 고객 2명, 주문이 2건인 고객 2명, 1건인 고객 1명이에요.</li>
+<li>left_join 후 고객별 주문 수를 <code>n()</code>으로 세면 무엇이 틀리나요?</li>
+<li>사원 급여표에서 total = pay + pay × bonus일 때, "총 급여 300 이상인 사원번호와 총 급여"를 dplyr로 쓰세요. (과제 8번)</li>
+<li><code>dbGetQuery(con, paste0("SELECT * FROM student WHERE name = '", name, "'"))</code>의 문제와 고친 코드는?</li>
 </ol>
 </div>
 <div>
@@ -1105,6 +1465,9 @@ lm(y ~ a + b, data = df); predict(fit, newdata)</code></pre></div>
 <details><summary>10번 정답</summary><p>3 + 3 − 2 = 4차원, 3×3×3×3</p></details>
 <details><summary>11 · 12번 정답</summary><p>11. 평균 40 ÷ 8 = 5, 중앙값 (4 + 5) ÷ 2 = 4.5, 편차제곱합 9+1+1+1+0+0+4+16 = 32 → 분산 32 ÷ 7 ≈ 4.571 (sd ≈ 2.138)<br>12. IQR = 7.375, 상한 22.8 + 11.0625 = 33.8625 → 33.9는 이상치. boxplot.stats는 힌지(15.35, 22.8) 기준 상한 33.975라서 이상치 없음(numeric(0)).</p></details>
 <details><summary>13 · 14번 정답</summary><p>13. Min-Max = (50 − 10) ÷ 40 = 1. 평균 30, sd = √(1000 ÷ 4) ≈ 15.81 → Z ≈ 1.265<br>14. 네 열의 합이 항상 1이라 절편 열과 선형종속이에요. XᵀX가 특이행렬(det = 0)이 되어 계수 하나가 NA로 나와요. 범주 수 − 1개 열만 넣어요.</p></details>
+<details><summary>15 · 16번 정답</summary><p>15. filter → WHERE, group_by → GROUP BY, summarise → SELECT의 집계, 집계 후 filter → HAVING, arrange → ORDER BY. 실행 순서: FROM → WHERE → GROUP BY → HAVING → SELECT → ORDER BY<br>16. 7행: 짝 있는 주문 5행(Kim 2, Lee 1, Park 2) + 주문 없는 Choi·Jung 2행. 주문 106은 고객이 왼쪽 테이블에 없어 빠져요.</p></details>
+<details><summary>17 · 18번 정답</summary><p>17. 주문이 없는 고객도 NA 행이 하나 있어서 1건으로 세져요. <code>sum(!is.na(order_id))</code>처럼 주문 열에 값이 있는 행만 세요 (SQL: COUNT(order_id)).<br>18. <code>pay201801 |&gt; mutate(total = pay + pay * bonus) |&gt; filter(total &gt;= 300) |&gt; select(empno, total)</code> → 104: 345, 105: 1000. select를 먼저 하면 total이 사라져 에러예요.</p></details>
+<details><summary>19번 정답</summary><p>입력값이 SQL 문법으로 해석돼서 <code>x' OR '1'='1</code> 같은 값이면 전체 행이 조회돼요(SQL 인젝션). <code>dbGetQuery(con, "SELECT * FROM student WHERE name = ?", params = list(name))</code></p></details>
 <div class="code"><pre><code>C &lt;- matrix(c(2, 0, 1, 3), nrow = 2, byrow = TRUE)
 D &lt;- matrix(c(1, 4, 2, 1), nrow = 2, byrow = TRUE)
 C * D; C %*% D; det(C); solve(C)
@@ -1522,7 +1885,7 @@ $('#typeGrid').innerHTML=T.map(t=>{
   return '<article class="type"><div class="pat" style="grid-template-columns:repeat('+t[3]+',22px)">'+cells+'</div><h3>'+t[0]+'</h3><p class="def">'+t[1]+'</p><ul>'+t[5].map(x=>'<li>'+x+'</li>').join('')+'</ul><p class="gain"><b>이점</b> '+t[6]+'</p></article>';
 }).join('');
 
-/* mask */
+/* mask (gpt causal) */
 const wd=['나는','오늘','행렬을','공부','한다'];
 let mk='<div class="hd"></div>'+wd.map(w=>'<div class="hd">'+w+'</div>').join('');
 wd.forEach((w,i)=>{mk+='<div class="hd" style="text-align:right">'+w+'</div>'+wd.map((_,j)=>j<=i?'<div class="on">봄</div>':'<div class="off">−∞</div>').join('')});
@@ -1592,6 +1955,77 @@ if($('#pSvg')){
   };
   $$('#pBtns .btn').forEach(b=>b.addEventListener('click',()=>{k=b.dataset.k;$$('#pBtns .btn').forEach(x=>x.setAttribute('aria-pressed',x===b));draw()}));
   $('#pOut').addEventListener('change',draw);draw();
+}
+
+/* SQL order (11/26) */
+{
+  const ST=[
+    ['FROM · JOIN','어떤 테이블을 어떻게 합칠지 먼저 정해요. 이 단계가 끝나야 product, amount 같은 다른 테이블의 열이 생겨요.'],
+    ['WHERE','합친 표에서 행을 걸러요. 아직 SELECT 전이라 SELECT에서 붙일 별칭(tot_amount)은 여기서 쓸 수 없어요.'],
+    ['GROUP BY','남은 행을 그룹으로 묶어요. 이후 단계는 그룹 단위로 계산돼요.'],
+    ['HAVING','그룹으로 집계한 값으로 걸러요. WHERE는 행을, HAVING은 그룹을 걸러요. dplyr에서는 summarise 뒤의 filter라서 summarise보다 아래에 써요.'],
+    ['SELECT','출력할 열과 집계값을 계산하고 별칭을 붙여요. 맨 앞에 쓰지만 실행은 다섯 번째예요. dplyr에서는 summarise (또는 select, mutate)예요.'],
+    ['ORDER BY','완성된 결과를 정렬해요. SELECT 뒤라서 별칭(tot_amount)으로 정렬할 수 있어요.'],
+    ['LIMIT','앞에서 몇 행만 남겨요. dplyr에서는 head(), DB 쿼리라면 그다음 collect()로 가져와요.']
+  ];
+  const W=[[5,'SELECT city, COUNT(DISTINCT c.customer_id) AS 고객수,'],[5,'       SUM(amount) AS tot_amount, AVG(amount) AS avg_amount'],[1,'FROM customers c'],[1,'  JOIN orders o ON c.customer_id = o.customer_id'],[2,'WHERE amount >= 40'],[3,'GROUP BY city'],[4,'HAVING SUM(amount) > 100'],[6,'ORDER BY tot_amount DESC'],[7,'LIMIT 5;']];
+  const E=[[1,'FROM customers c'],[1,'  JOIN orders o ON c.customer_id = o.customer_id'],[2,'WHERE amount >= 40'],[3,'GROUP BY city'],[4,'HAVING SUM(amount) > 100'],[5,'SELECT city, COUNT(DISTINCT ...) AS 고객수,'],[5,'       SUM(amount) AS tot_amount, ...'],[6,'ORDER BY tot_amount DESC'],[7,'LIMIT 5']];
+  const D=[[1,'customers_tbl |>'],[1,'  inner_join(orders_tbl, by = "customer_id") |>'],[2,'  filter(amount >= 40) |>'],[3,'  group_by(city) |>'],[5,'  summarise(고객수 = n_distinct(customer_id),'],[5,'            tot_amount = sum(amount, na.rm = TRUE),'],[5,'            avg_amount = mean(amount, na.rm = TRUE)) |>'],[4,'  filter(tot_amount > 100) |>'],[6,'  arrange(desc(tot_amount)) |>'],[7,'  head(5) |> collect()']];
+  const esc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  const fillC=(id,arr)=>{$('#'+id).innerHTML=arr.map(r=>'<div data-s="'+r[0]+'"><b>'+r[0]+'</b>'+esc(r[1])+'</div>').join('')};
+  fillC('sqWrite',W);fillC('sqExec',E);fillC('sqDplyr',D);
+  $('#sqSteps').innerHTML=ST.map((t,i)=>'<button class="btn" type="button" data-i="'+(i+1)+'" aria-pressed="false">'+(i+1)+' '+t[0]+'</button>').join('');
+  const pickS=i=>{
+    $$('#sqSteps .btn').forEach(b=>b.setAttribute('aria-pressed',String(+b.dataset.i===i)));
+    $$('.codeview div').forEach(d=>d.classList.toggle('on',+d.dataset.s===i));
+    $('#sqTitle').textContent='실행 '+i+'단계: '+ST[i-1][0];
+    $('#sqDesc').textContent=ST[i-1][1];
+  };
+  $('#sqSteps').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b)pickS(+b.dataset.i)});
+  pickS(1);
+}
+
+/* join visualizer (11/26) */
+{
+  const C=[[1,'Kim','Seoul'],[2,'Lee','Busan'],[3,'Park','Seoul'],[4,'Choi','Daegu'],[5,'Jung','Busan']];
+  const O=[[101,1,'Laptop',1500],[102,1,'Mouse',50],[103,2,'Keyboard',120],[104,3,'Monitor',300],[105,3,'Mouse',45],[106,6,'Tablet',900]];
+  const JT={
+    inner:['inner_join','양쪽에 모두 키가 있는 행만 남아요. Choi·Jung과 주문 106이 빠져요.','INNER JOIN'],
+    left:['left_join','왼쪽(customers)은 전부 남고, 오른쪽에 짝이 없으면 주문 열이 NA예요. 주문 106은 빠져요.','LEFT JOIN'],
+    right:['right_join','오른쪽(orders)은 전부 남고, 왼쪽에 짝이 없으면 고객 열이 NA예요. orders |> left_join(customers)와 같은 행이에요.','RIGHT JOIN'],
+    full:['full_join','양쪽 모두 전부 남아요. NA가 양쪽 방향으로 생겨요.','FULL JOIN'],
+    semi:['semi_join','열은 붙이지 않고, 오른쪽에 짝이 있는 왼쪽 행만 남겨요. 주문한 적 있는 고객이에요.','WHERE EXISTS (...)'],
+    anti:['anti_join','열은 붙이지 않고, 오른쪽에 짝이 없는 왼쪽 행만 남겨요. 주문하지 않은 고객이에요.','WHERE NOT EXISTS (...)']
+  };
+  const keysO=new Set(O.map(o=>o[1])),keysC=new Set(C.map(c=>c[0]));
+  const tdv=v=>v===null?'<td class="na">NA</td>':'<td>'+v+'</td>';
+  let jt='left';
+  function drawJ(){
+    $$('#jType .btn').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.t===jt)));
+    const lAll=(jt==='left'||jt==='full'),rAll=(jt==='right'||jt==='full'),filt=(jt==='semi'||jt==='anti');
+    const lCls=c=>{const m=keysO.has(c[0]);if(jt==='semi')return m?'hit':'out';if(jt==='anti')return m?'out':'miss';return m?'hit':(lAll?'miss':'out')};
+    const rCls=o=>{if(filt)return '';const m=keysC.has(o[1]);return m?'hit':(rAll?'miss':'out')};
+    $('#jL').innerHTML='<thead><tr><th>customer_id</th><th>name</th><th>city</th></tr></thead><tbody>'+C.map(c=>'<tr class="'+lCls(c)+'"><td class="key">'+c[0]+'</td><td>'+c[1]+'</td><td>'+c[2]+'</td></tr>').join('')+'</tbody>';
+    $('#jR').innerHTML='<thead><tr><th>order_id</th><th>customer_id</th><th>product</th><th>amount</th></tr></thead><tbody>'+O.map(o=>'<tr class="'+rCls(o)+'"><td>'+o[0]+'</td><td class="key">'+o[1]+'</td><td>'+o[2]+'</td><td>'+o[3]+'</td></tr>').join('')+'</tbody>';
+    let rows=[],head;
+    if(filt){
+      head=['customer_id','name','city'];
+      rows=C.filter(c=>jt==='semi'?keysO.has(c[0]):!keysO.has(c[0])).map(c=>[c[0],c[1],c[2]]);
+    }else{
+      head=['customer_id','name','city','order_id','product','amount'];
+      C.forEach(c=>{const ms=O.filter(o=>o[1]===c[0]);if(ms.length)ms.forEach(o=>rows.push([c[0],c[1],c[2],o[0],o[2],o[3]]));else if(lAll)rows.push([c[0],c[1],c[2],null,null,null])});
+      if(rAll)O.filter(o=>!keysC.has(o[1])).forEach(o=>rows.push([o[1],null,null,o[0],o[2],o[3]]));
+    }
+    $('#jRes').innerHTML='<thead><tr>'+head.map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+rows.map(r=>'<tr>'+r.map((v,i)=>i===0?'<td class="key">'+v+'</td>':tdv(v)).join('')+'</tr>').join('')+'</tbody>';
+    const t=JT[jt];
+    $('#jHead').textContent=t[0]+' → '+rows.length+'행';
+    $('#jDesc').textContent=t[1];
+    $('#jResLab').textContent='결과 ('+rows.length+'행 × '+head.length+'열)';
+    $('#jCode').textContent='customers_tbl |> '+t[0]+'(orders_tbl, by = "customer_id")\n'+(filt?'-- SQL: SELECT * FROM customers '+t[2]:'-- SQL: SELECT ... FROM customers '+t[2]+' orders\n--      ON (customers.customer_id = orders.customer_id)');
+  }
+  $('#jType').innerHTML=Object.keys(JT).map(k=>'<button class="btn" type="button" data-t="'+k+'" aria-pressed="false">'+JT[k][0]+'</button>').join('');
+  $('#jType').addEventListener('click',e=>{const b=e.target.closest('.btn');if(b){jt=b.dataset.t;drawJ()}});
+  drawJ();
 }
 
 /* copy buttons */
