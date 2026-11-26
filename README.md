@@ -38,7 +38,7 @@ R/
 
 | 파일 | 내용 |
 |---|---|
-| [20261126_박재순_R10문_과제.R](과제/20261126_박재순_R10문_과제.R) | R 기초 10문항 — vector, sum/mean, summary, data.frame, 파생변수(total = pay + pay × bonus), barplot, dplyr filter·select, cbind로 열 추가, group_by·summarise 부서별 평균. 8번은 `filter(total >= 300)`를 `select()`보다 먼저 써야 해요(학습노트 "dplyr·SQL 순서" 참고) |
+| [20261126_박재순_R10문_과제.R](과제/20261126_박재순_R10문_과제.R) | R 기초 10문항 — vector, sum/mean, summary, data.frame, 파생변수(total = pay + pay × bonus), barplot, dplyr filter·select, cbind로 열 추가, group_by·summarise 부서별 평균. 8번은 `filter(total >= 300)` → `select(empno, total)` 순서로 수정(조건에 쓸 열을 먼저 거르고 출력 열은 마지막에 고름, 학습노트 "dplyr·SQL 순서" 참고) |
 
 ## 실행
 

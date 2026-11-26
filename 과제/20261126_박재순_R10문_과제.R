@@ -44,8 +44,9 @@ barplot(pay201801$pay,
         xlab = "empno", ylab = "pay")
 
 #  8. dplyr 패키지 관련 함수를 이용하여 총 급여 300이상의 사원번호와 총 급여를 출력하시오.
-dplyr::select(pay201801, empno, pay) |>
-  filter(total >= 300)
+pay201801 |>
+  filter(total >= 300) |>
+  dplyr::select(empno, total)
 
 #  9. 다음의 출력처럼 부서번호(deptno)를 추가한다.
 #  empno   pay   bonus  deptno
